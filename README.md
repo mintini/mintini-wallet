@@ -1,50 +1,43 @@
-# React + TypeScript + Vite
+# 🪙 Mintini Wallet
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Mintini Wallet** is a lightweight and secure crypto wallet for the **Mintlayer** network. It allows users to manage their digital assets safely, generate and store private keys locally, and send transactions.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🔐 **Key generation & local storage** (keys are securely stored in IndexedDB)
+- 📜 **Address creation and management**
+- 💸 **Send and receive transactions**
+- ⚡ **Fast and intuitive UI**
+- 🔗 **Seamless integration with Mintlayer**
 
-## Expanding the ESLint configuration
+## 🔧 Installation & Setup
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+To run Mintini Wallet locally, follow these steps:
 
-- Configure the top-level `parserOptions` property like this:
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/yourusername/mintini-wallet.git
+   cd mintini-wallet
+   ```
+   
+2. **Install dependencies:**
+   ```sh
+    npm install
+    ```
+   
+3. **Start the development server:**
+   ```sh
+   npm run dev
+   ```
+   
+   The development server should now be running at `http://localhost:3000`.
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+4. **Build the project:**
+   ```sh
+   npm run build
+   ```
+   
+## 📝 License
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
