@@ -20,6 +20,13 @@ export default {
         white: '#FFFFFF',  // Standard white
         black: '#333333',  // Black for contrast text or elements
       },
+      // add safe paddings from var(--tg-content-safe-area-inset-bottom)
+      // and var(--tg-content-safe-area-inset-top) to the bottom and top
+      // of the body, respectively
+      padding: {
+        'safe-bottom': 'var(--tg-content-safe-area-inset-bottom)',
+      },
+
     },
   },
   plugins: [],

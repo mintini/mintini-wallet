@@ -38,6 +38,10 @@ export const WalletActivity = () => {
     getPendingTransactions();
   }, [])
 
+  const TOKEN_LABELS = {
+    'Coin': 'ML',
+  };
+
   useEffect(() => {
     // fetch activity from endpoint
     const fetchActivity = async () => {
@@ -148,12 +152,12 @@ export const WalletActivity = () => {
                   <div className="text-right">
                     {
                       item.amount.inflow.total > 0 && (
-                        <div className="whitespace-nowrap flex flex-nowrap justify-end"><div>+{item.amount?.inflow?.total}</div> <div className="inline-block w-10 overflow-hidden">{item.amount?.inflow?.token.token_id}</div></div>
+                        <div className="whitespace-nowrap flex flex-nowrap justify-end"><div>+{item.amount?.inflow?.total}</div> <div className="inline-block w-10 overflow-hidden">{TOKEN_LABELS[item.amount?.inflow?.token.token_id] || item.amount?.inflow?.token.token_id}</div></div>
                       )
                     }
                     {
                       item.amount.outflow.total > 0 && (
-                        <div className="whitespace-nowrap flex flex-nowrap justify-end"><div>-{item.amount?.outflow?.total}</div> <div className="inline-block w-10 overflow-hidden">{item.amount?.outflow?.token.token_id}</div></div>
+                        <div className="whitespace-nowrap flex flex-nowrap justify-end"><div>-{item.amount?.outflow?.total}</div> <div className="inline-block w-10 overflow-hidden">{TOKEN_LABELS[item.amount?.outflow?.token.token_id] || item.amount?.outflow?.token.token_id}</div></div>
                       )
                     }
                   </div>

@@ -2,6 +2,7 @@
 import {useEffect, useState} from "react";
 import {useTelegram} from "../context/Telegram.tsx";
 import {useMintlayer} from "../context/Mintlayer.tsx";
+import {useDatabase} from "../context/Database.tsx";
 import {
   Amount,
   encode_input_for_fill_order,
@@ -12,11 +13,13 @@ import {
 } from "../lib/mintlayer/wasm_wrappers";
 import {getOutputs, mergeUint8Arrays, selectUTXOs} from "../lib/mintlayer/helpers.ts";
 import {TokenSelector} from "../_components/TokenSelector.tsx";
+import {saveTransactions} from "../lib/storage/database.ts";
 
 export const WalletDex = () => {
   const { telegram } = useTelegram();
   const [ state, setState ] = useState('form');
-  const { tokens, addresses, utxos, network, addressesPrivateKeys } = useMintlayer();
+  const { db } = useDatabase();
+  const { tokens, addresses, utxos, network, addressesPrivateKeys, refreshAccount, wallet } = useMintlayer();
 
   const [sell, setSell] = useState(0);
 
@@ -175,7 +178,7 @@ export const WalletDex = () => {
       .filter(({utxo}) => utxo === null)
       .map((input: any) => {
         const command = input.input;
-        const nonce = pairs.find((pair: any) => pair.order_id === command.order_id).nonce;
+        const nonce = pairs.find((pair: any) => pair.order_id === command.order_id).nonce + 2;
         return encode_input_for_fill_order(
           command.order_id,
           Amount.from_atoms(command.fill_atoms),
@@ -323,23 +326,39 @@ export const WalletDex = () => {
   const buyTokenSymbol = tokensList.find((item: any) => item.token_id === buyToken)?.symbol;
   // const sellTokenSymbol = tokens.find((item: any) => item.ticker === sellToken)?.symbol;
 
-  const handleBroadcast = () => {
+  const handleBroadcast = async () => {
     setState('broadcast');
     const transactionBody = transactionHEX;
     try {
-      fetch(`https://api-server${network===1?'-lovelace':''}.mintlayer.org/api/v2/transaction`, {
+      const response = await fetch(`https://api-server${network===1?'-lovelace':''}.mintlayer.org/api/v2/transaction`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: transactionBody,
-      }).then((response) => {
-        if (response.status === 200) {
-          setTransactionBroadcastingStatus('success');
-        } else {
-          setTransactionBroadcastingStatus('error');
-        }
       });
+
+      if (response.status === 200) {
+        const { tx_id } = await response.json();
+        const transactionEntry = {
+          id: tx_id,
+          inputs: transactionJSONrepresentation.inputs,
+          outputs: transactionJSONrepresentation.outputs,
+          fee: {
+            atoms: fee.toString(),
+            decimal: (fee.toString() / 1e11).toString(),
+          },
+          timestamp: Math.floor(Date.now() / 1000),
+          confirmations: '0',
+        }
+        // store transaction in the database
+        await saveTransactions(db, wallet.id, [transactionEntry]);
+        refreshAccount();
+
+        setTransactionBroadcastingStatus('success');
+      } else {
+        setTransactionBroadcastingStatus('error');
+      }
     } catch (e) {
       setTransactionBroadcastingStatus('error');
     }

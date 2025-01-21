@@ -38,6 +38,8 @@ export const MintlayerProvider  = ({ children }) => {
   const [tokens, setTokens] = useState([]);
   const [tokensLoading, setTokensLoading] = useState(false);
 
+  const [chainHeight, setChainHeight] = useState(0);
+
   const [utxos, setUtxos] = useState([]);
 
   const [network, setNetwork] = useState(null);
@@ -46,6 +48,24 @@ export const MintlayerProvider  = ({ children }) => {
 
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [activity, setActivity] = useState([]);
+
+  useEffect(() => {
+    const ws = new WebSocket('wss://api.mintini.app/ws');
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'network', data: network }));
+      ws.send(JSON.stringify({ type: 'subscribe', data: 'chainHeight' }));
+    }
+    ws.onerror = (error) => {
+      console.error(error);
+    };
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log(data);
+      if(data.event === 'blockHeight') {
+        setChainHeight(data.height);
+      }
+    }
+  }, []);
 
   const changeNetwork = (newNetwork) => {
     setNetwork(newNetwork === 'testnet' ? ml.Network.Testnet : ml.Network.Mainnet);
@@ -172,7 +192,11 @@ export const MintlayerProvider  = ({ children }) => {
     getAddresses();
     getActivity();
     getPendingTransactions();
-  }, [selectedWallet, network]);
+  }, [
+    selectedWallet,
+    network,
+    chainHeight, // update if chain height changed
+  ]);
 
   const refreshAccount = () => {
     getAddresses();
@@ -217,7 +241,10 @@ export const MintlayerProvider  = ({ children }) => {
   const usedUtxos = pendingTransactions.map(tx => tx.inputs).flat();
 
   const cutUsedUtxos = (utxo) => {
+    console.log('cutUsedUtxos', utxo);
+    if(!utxo) return false;
     for (let i = 0; i < usedUtxos.length; i++) {
+      if(!usedUtxos[i].outpoint) return true;
       if(
         usedUtxos[i].outpoint.source_id === utxo.outpoint.source_id &&
         usedUtxos[i].outpoint.index === utxo.outpoint.index
@@ -248,6 +275,7 @@ export const MintlayerProvider  = ({ children }) => {
 
     addressesPrivateKeys: privateKeys,
     refreshAccount,
+    chainHeight,
   }
 
   return (

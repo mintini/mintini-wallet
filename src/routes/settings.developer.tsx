@@ -8,7 +8,7 @@ import {useMintlayer} from "../context/Mintlayer.tsx";
 export const SettingsDeveloper = () => {
   const { telegram } = useTelegram();
   const { db } = useDatabase();
-  const { changeNetwork } = useMintlayer();
+  const { changeNetwork, chainHeight } = useMintlayer();
   const navigate = useNavigate();
 
   const [testnetMode, setTestnetMode] = useState(false);
@@ -60,6 +60,14 @@ export const SettingsDeveloper = () => {
             Testnet mode
             <span className={`transition-all border rounded-full border-mint flex items-center cursor-pointer w-12 justify-start ${testnetMode?'justify-end':'justify-start'} ${testnetMode?'bg-mint-dark':'bg-red-50'}`}>
               <span className="rounded-full border w-6 h-6 border-mint shadow-inner bg-mint shadow" />
+            </span>
+          </div>
+        </div>
+        <div>
+          <div className="px-2 py-2 rounded-2xl border border-mint-dark flex flex-row justify-between items-center">
+            Chain height
+            <span className="px-2 py-1 rounded-2xl border border-mint-dark">
+              {chainHeight}
             </span>
           </div>
         </div>
