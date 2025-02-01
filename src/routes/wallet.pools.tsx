@@ -1,12 +1,10 @@
 import {useState} from "react";
-import {useTelegram} from "../context/Telegram.tsx";
 import {useEffect} from "react";
 import {Link, useLocation, useNavigate} from "react-router-dom";
 import {useMintlayer} from "../context/Mintlayer.tsx";
 import {Outlet} from "react-router";
 
 export const WalletPools = () => {
-  const { telegram } = useTelegram();
   const location = useLocation();
   const navigate = useNavigate();
   const { delegations, network } = useMintlayer();
@@ -90,7 +88,7 @@ export const WalletPools = () => {
         </div>
       </div>
 
-      {/*<div onClick={handleToggleLowBalance}>{ hideLowBalance ? 'show' : 'hide' }</div>*/}
+      <div className="px-4" onClick={handleToggleLowBalance}>{ hideLowBalance ? 'toggle low balance pools' : 'toggle low balance pools' }</div>
 
       {account_pools.filter(lowBalance).map((pool, index) => (
         <div key={index} onClick={handlePoolClick(pool.pool_id)} className="mx-4 bg-white rounded-xl p-4 mb-4">

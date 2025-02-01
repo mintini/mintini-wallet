@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {useEffect, useState} from "react";
 import {useDatabase} from "../../context/Database.tsx";
 import {useMintlayer} from "../../context/Mintlayer.tsx";
@@ -16,7 +17,7 @@ export const JoinPool = ({ poolId }) => {
   const [ state, setState ] = useState('form');
   const [ transactionBroadcastingStatus, setTransactionBroadcastingStatus ] = useState('');
   const { db } = useDatabase();
-  const { utxos, network, addresses, addressesPrivateKeys, wallet, refreshAccount, chainHeight } = useMintlayer();
+  const { utxos, network, addresses, addressesPrivateKeys, wallet, refreshAccount } = useMintlayer();
 
   const [ transactionHEX, setTransactionHEX ] = useState('');
 

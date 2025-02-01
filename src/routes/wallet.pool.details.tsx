@@ -8,23 +8,33 @@ import {JoinPool} from "../_components/staking/join.tsx";
 import {DelegationStake} from "../_components/staking/stake.tsx";
 import {DelegationWithdraw} from "../_components/staking/withdraw.tsx";
 
+type AccountPool = {
+  pool_id: string;
+  pool_label: string;
+  balance: number;
+  delegation_id: string;
+  delegation_label: string;
+  next_nonce: number;
+  spend_destination: string;
+}
+
+type Delegation = {
+  pool_id: string;
+  delegation_id: string;
+  balance: {
+    atoms: number;
+    decimal: number;
+  };
+  next_nonce: number;
+  spend_destination: string;
+}
+
 export const WalletPoolDetails = () => {
   // get pool_id from URL
   const { poolId } = useParams();
   const { telegram } = useTelegram();
-  const { delegations, lastBlockTime } = useMintlayer();
+  const { delegations } = useMintlayer();
   const [action, setAction] = useState('stake');
-
-  const [poolsData, setPools] = useState([]);
-
-  useEffect(() => {
-    const fetchPools = async () => {
-      const response = await fetch('https://explorer.mintlayer.org/api/pool/list');
-      const data = await response.json();
-      setPools(data);
-    }
-    fetchPools();
-  }, []);
 
   useEffect(() => {
     if (telegram) {
@@ -32,7 +42,7 @@ export const WalletPoolDetails = () => {
     }
   }, []);
 
-  const account_pools: any[] = delegations.map((delegation: any) => {
+  const account_pools: AccountPool[] = delegations.map((delegation: Delegation) => {
     return {
       pool_id: delegation.pool_id,
       pool_lablel: delegation.pool_id.slice(0, 6) + '...' +  delegation.pool_id.slice(-6),
@@ -62,8 +72,8 @@ export const WalletPoolDetails = () => {
                     Your delegation balance on this pool:
                   </div>
                   <div className="text-center text-2xl">
-                    {my_delegations.reduce((acc, pool) => {
-                      return acc + parseFloat(pool.balance);
+                    {my_delegations.reduce((acc, pool: AccountPool) => {
+                      return acc + parseFloat(pool.balance.toString());
                     }, 0)} ML
                   </div>
 

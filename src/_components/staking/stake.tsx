@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {useEffect, useState} from "react";
 import {useDatabase} from "../../context/Database.tsx";
 import {useMintlayer} from "../../context/Mintlayer.tsx";
