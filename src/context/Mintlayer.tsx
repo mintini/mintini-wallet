@@ -39,8 +39,10 @@ export const MintlayerProvider  = ({ children }) => {
   const [tokensLoading, setTokensLoading] = useState(false);
 
   const [chainHeight, setChainHeight] = useState(0);
+  const [lastBlockTime, setLastBlockTime] = useState(0);
 
   const [utxos, setUtxos] = useState([]);
+  const [delegations, setDelegations] = useState([]);
 
   const [network, setNetwork] = useState(null);
 
@@ -49,23 +51,29 @@ export const MintlayerProvider  = ({ children }) => {
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [activity, setActivity] = useState([]);
 
+  const [socket, setSocket] = useState(null);
+
   useEffect(() => {
     const ws = new WebSocket('wss://api.mintini.app/ws');
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'network', data: network }));
-      ws.send(JSON.stringify({ type: 'subscribe', data: 'chainHeight' }));
+      ws.send(JSON.stringify({ event: 'setNetwork', network: network === 1 ? 'testnet' : 'mainnet' }));
     }
     ws.onerror = (error) => {
       console.error(error);
     };
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log(data);
       if(data.event === 'blockHeight') {
         setChainHeight(data.height);
+        setLastBlockTime(new Date());
       }
     }
+    setSocket(ws);
   }, []);
+
+  useEffect(() => {
+    socket?.send(JSON.stringify({ event: 'setNetwork', network: network === 1 ? 'testnet' : 'mainnet' }));
+  }, [network]);
 
   const changeNetwork = (newNetwork) => {
     setNetwork(newNetwork === 'testnet' ? ml.Network.Testnet : ml.Network.Mainnet);
@@ -115,6 +123,7 @@ export const MintlayerProvider  = ({ children }) => {
     setTokens(data.tokens);
     setTokensLoading(false);
     setUtxos(data.utxos);
+    setDelegations(data.delegations);
   }
 
   const getActivity = async () => {
@@ -241,7 +250,6 @@ export const MintlayerProvider  = ({ children }) => {
   const usedUtxos = pendingTransactions.map(tx => tx.inputs).flat();
 
   const cutUsedUtxos = (utxo) => {
-    console.log('cutUsedUtxos', utxo);
     if(!utxo) return false;
     for (let i = 0; i < usedUtxos.length; i++) {
       if(!usedUtxos[i].outpoint) return true;
@@ -276,6 +284,9 @@ export const MintlayerProvider  = ({ children }) => {
     addressesPrivateKeys: privateKeys,
     refreshAccount,
     chainHeight,
+
+    delegations,
+    lastBlockTime,
   }
 
   return (

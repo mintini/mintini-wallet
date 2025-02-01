@@ -2,9 +2,12 @@
 import {
   Amount,
   encode_lock_for_block_count,
-  encode_lock_until_time, encode_output_lock_then_transfer,
+  encode_lock_until_time,
+  encode_output_create_delegation,
+  encode_output_delegate_staking,
+  encode_output_lock_then_transfer,
   encode_output_token_transfer,
-  encode_output_transfer
+  encode_output_transfer, staking_pool_spend_maturity_block_count
 } from "./wasm_wrappers";
 
 interface UTXO {
@@ -71,15 +74,16 @@ export const getOutputs = ({
                              lock,
                              chainTip,
                              tokenId,
+                             poolId,
+                             delegation_id,
                            }) => {
   if (type === 'LockThenTransfer' && !lock) {
     throw new Error('LockThenTransfer requires a lock')
   }
 
-  const amountInstace = Amount.from_atoms(amount)
-
   const networkIndex = networkType
   if (type === 'Transfer') {
+    const amountInstace = Amount.from_atoms(amount);
     if (tokenId) {
       return encode_output_token_transfer(
         amountInstace,
@@ -92,19 +96,42 @@ export const getOutputs = ({
     }
   }
   if (type === 'LockThenTransfer') {
-    let lockEncoded
+    const amountInstance = Amount.from_atoms(amount);
     if (lock.type === 'UntilTime') {
-      lockEncoded = encode_lock_until_time(BigInt(lock.content.timestamp))
+      const lockEncoded = encode_lock_until_time(BigInt(lock.content.timestamp))
+      return encode_output_lock_then_transfer(
+        amountInstance,
+        address,
+        lockEncoded,
+        networkIndex,
+      )
     }
-    if (lock.type === 'ForBlockCount') {
-      lockEncoded = encode_lock_for_block_count(BigInt(lock.content))
+    if (lock.type === 'ForBlockCount' && !chainTip) {
+      const lockEncoded = encode_lock_for_block_count(BigInt(lock.content))
+      return encode_output_lock_then_transfer(
+        amountInstance,
+        address,
+        lockEncoded,
+        networkIndex,
+      )
     }
-    return encode_output_lock_then_transfer(
-      amountInstace,
-      address,
-      lockEncoded,
-      networkIndex,
-    )
+    if (lock.type === 'ForBlockCount' && chainTip) {
+      const stakingMaturity = staking_pool_spend_maturity_block_count(chainTip.toString(), networkIndex);
+      const lockEncoded = encode_lock_for_block_count(stakingMaturity);
+      return encode_output_lock_then_transfer(
+        amountInstance,
+        address,
+        lockEncoded,
+        networkIndex,
+      )
+    }
+  }
+  if(type === 'CreateDelegationId') {
+    return encode_output_create_delegation(poolId, address, networkIndex)
+  }
+  if(type === 'DelegateStaking') {
+    const amountInstace = Amount.from_atoms(amount);
+    return encode_output_delegate_staking(amountInstace, delegation_id, networkIndex)
   }
   // if (type === 'spendFromDelegation') {
   //   const stakingMaturity = getStakingMaturity(chainTip, networkType)
@@ -178,6 +205,8 @@ function analysisTransaction({tx, addresses}) {
       }
     },
   };
+
+  activity.confirmations = tx.confirmations;
 
   activity.txid = tx.id;
   activity.fee = tx.fee;

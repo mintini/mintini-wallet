@@ -12,6 +12,7 @@ import {Start} from "./routes/start.tsx";
 import {Onboarding} from "./routes/onboarding.tsx";
 import {WalletMain} from "./routes/wallet.main.tsx";
 import {WalletPools} from "./routes/wallet.pools.tsx";
+import {WalletPoolDetails} from "./routes/wallet.pool.details.tsx";
 import {WalletSend} from "./routes/wallet.send.tsx";
 import {WalletDex} from "./routes/wallet.dex.tsx";
 import {WalletActivity} from "./routes/wallet.activity.tsx";
@@ -113,6 +114,12 @@ const router = createBrowserRouter([
           {
             path: 'pools',
             element: <WalletPools />,
+            children: [
+              {
+                path: ':poolId',
+                element: <WalletPoolDetails />,
+              }
+            ],
           },
           {
             path: 'send',

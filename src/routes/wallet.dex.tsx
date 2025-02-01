@@ -23,6 +23,8 @@ export const WalletDex = () => {
 
   const [sell, setSell] = useState(0);
 
+  const [nonceAdjust, setNonceAdjust] = useState(0);
+
   const [sellError, setSellError] = useState('');
 
   const [fee, setFee] = useState(0n);
@@ -178,7 +180,7 @@ export const WalletDex = () => {
       .filter(({utxo}) => utxo === null)
       .map((input: any) => {
         const command = input.input;
-        const nonce = pairs.find((pair: any) => pair.order_id === command.order_id).nonce + 2;
+        const nonce = pairs.find((pair: any) => pair.order_id === command.order_id).nonce + nonceAdjust; // TODO change nonce is failed
         return encode_input_for_fill_order(
           command.order_id,
           Amount.from_atoms(command.fill_atoms),
@@ -273,8 +275,6 @@ export const WalletDex = () => {
       return;
     }
 
-    console.log(tokensToBuy[buyToken]);
-
     const availableOrders = tokensToBuy[buyToken].filter((pair: any) => pair.ask_balance > sell);
 
     if(availableOrders.length === 0) {
@@ -337,6 +337,8 @@ export const WalletDex = () => {
         },
         body: transactionBody,
       });
+
+      // TODO: setNonceAdjust from the error response. also might be UTXO
 
       if (response.status === 200) {
         const { tx_id } = await response.json();
@@ -603,9 +605,9 @@ export const WalletDex = () => {
                 <div className="text-xl">
                   Transaction details
                 </div>
-                {/*<div className="whitespace-pre">*/}
-                {/*  {JSON.stringify(transactionJSONrepresentation, null, 2)}*/}
-                {/*</div>*/}
+                <div className="whitespace-pre">
+                  {JSON.stringify(transactionJSONrepresentation, null, 2)}
+                </div>
                 <div>
                   <div className="text-sm">
                     Inputs
@@ -647,14 +649,14 @@ export const WalletDex = () => {
                     }
                   </div>
                 </div>
-                {/*<div>*/}
-                {/*  <div>*/}
-                {/*    HEX:*/}
-                {/*  </div>*/}
-                {/*  <div className="break-all bg-amber-200 rounded-3xl p-2">*/}
-                {/*    {transactionHEX}*/}
-                {/*  </div>*/}
-                {/*</div>*/}
+                <div>
+                  <div>
+                    HEX:
+                  </div>
+                  <div className="break-all bg-amber-200 rounded-3xl p-2">
+                    {transactionHEX}
+                  </div>
+                </div>
               </div>
             </div>
 

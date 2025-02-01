@@ -86,8 +86,6 @@ export const WalletMain = () => {
 
   const total_change = tokens.reduce((acc: number, item: any) => acc + item.value * item.value_change_percent / 100, 0);
 
-  console.log('tokens', tokens);
-
   const change_percent = tokens.reduce((acc: number, item: any) => acc + item.value_change_percent, 0);
 
   return (
@@ -107,7 +105,7 @@ export const WalletMain = () => {
                   total_change !== 0 ? (
                     <div className="flex flex-row gap-2 mt-2 text-xl">
                       <div className={`${total_change < 0 ? 'text-red-700' : 'text-green-700'}`}>{total_change < 0 ? '-' : '+'}${Math.abs(total_change.toFixed(2))}</div>
-                      <div className={`${total_change < 0 ? 'bg-red-200' : 'bg-green-200'} ${total_change < 0 ? 'text-red-600' : 'text-green-600'} rounded-xl px-2`}>{total_change < 0 ? '-' : '+'}{change_percent.toFixed(2)}%</div>
+                      <div className={`${total_change < 0 ? 'bg-red-200' : 'bg-green-200'} ${total_change < 0 ? 'text-red-600' : 'text-green-600'} rounded-xl px-2`}>{total_change < 0 ? '' : '+'}{change_percent.toFixed(2)}%</div>
                     </div>
                   ) : <></>
                 }

@@ -101,9 +101,10 @@ export const WalletLayout = () => {
                    to="/wallet/dex">
             <img src='/icons/swap.svg' className="w-8 h-8" alt="qr-code-scanner"/>
           </NavLink>
-          {/*<NavLink className={({ isActive }) => `${isActive?'bg-mint-light':'bg-mint'} rounded-xl px-2 py-2`} to="/wallet/pools">*/}
-          {/*  Staking <sup>soon</sup>*/}
-          {/*</NavLink>*/}
+          <NavLink className={({isActive}) => `${isActive ? 'bg-mint-light' : 'bg-mint'} rounded-xl px-2 py-2`}
+                   to="/wallet/pools">
+            <img src='/icons/grow.svg' className="w-8 h-8" alt="qr-code-scanner"/>
+          </NavLink>
           <NavLink className={({isActive}) => `${isActive ? 'bg-mint-light' : 'bg-mint'} rounded-xl px-2 py-2`}
                    to="/wallet/activity">
             <img src='/icons/history.svg' className="w-8 h-8" alt="qr-code-scanner"/>

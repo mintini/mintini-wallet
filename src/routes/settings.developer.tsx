@@ -8,7 +8,7 @@ import {useMintlayer} from "../context/Mintlayer.tsx";
 export const SettingsDeveloper = () => {
   const { telegram } = useTelegram();
   const { db } = useDatabase();
-  const { changeNetwork, chainHeight } = useMintlayer();
+  const { changeNetwork, chainHeight, lastBlockTime, secondsFromLastBlock } = useMintlayer();
   const navigate = useNavigate();
 
   const [testnetMode, setTestnetMode] = useState(false);
@@ -68,6 +68,15 @@ export const SettingsDeveloper = () => {
             Chain height
             <span className="px-2 py-1 rounded-2xl border border-mint-dark">
               {chainHeight}
+            </span>
+          </div>
+        </div>
+        <div>
+          <div className="px-2 py-2 rounded-2xl border border-mint-dark flex flex-row justify-between items-center">
+            Last Block
+            <span className="px-2 py-1 rounded-2xl border border-mint-dark">
+              {lastBlockTime?.toLocaleString()} /
+              {secondsFromLastBlock}
             </span>
           </div>
         </div>

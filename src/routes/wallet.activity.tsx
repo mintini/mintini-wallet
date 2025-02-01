@@ -122,6 +122,11 @@ export const WalletActivity = () => {
                 </div>
                 <div className="w-full flex flex-row justify-between">
                   <div>
+                    {
+                      item.confirmations === '0' && (
+                        <div className="">Pending</div>
+                      )
+                    }
                     <div>{LABEL_MAP[item.type]}</div>
                     <div>
                       {
@@ -169,21 +174,71 @@ export const WalletActivity = () => {
       </div>
 
       <div className={`fixed max-h-full p-4 flex flex-col justify-between top-4 bottom-4 left-4 right-4 bg-mint z-50 transition-all rounded-3xl ${selectedTx?'visible opacity-100':'invisible opacity-0'}`}>
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center text-3xl mb-4">
           {selectedTx?.type}
         </div>
-        <div className="h-full">
-          <div className="whitespace-pre w-auto overflow-scroll">
-            Details of tx: {JSON.stringify(selectedTx)}
-          </div>
-          <div className="text-center mt-6">
-            <a href={`https://${isTestnet?'lovelace.':''}explorer.mintlayer.org/tx/${selectedTx?.txid}`} target="_blank">
-              View in explorer
-            </a>
+
+        <div className="flex items-center justify-center mb-4">
+          <div className="bg-white rounded-full w-24 h-24 flex items-center justify-center">
+            <img src="/coins/ml.svg" alt="Coin" className="w-16 h-16"/>
           </div>
         </div>
+
+        {
+          selectedTx && (
+            <>
+              {
+                selectedTx.amount.inflow.total > 0 && (
+                  <div className="flex items-center justify-center">
+                    <div className="text-3xl">
+                      {selectedTx.amount.inflow.total} {TOKEN_LABELS[selectedTx.amount.inflow.token.token_id] || selectedTx.amount.inflow.token.token_id}
+                    </div>
+                  </div>
+                )
+              }
+
+              {
+                selectedTx.amount.outflow.total > 0 && (
+                  <div className="flex items-center justify-center">
+                    <div className="text-3xl">
+                      {selectedTx.amount.outflow.total} {TOKEN_LABELS[selectedTx.amount.outflow.token.token_id] || selectedTx.amount.outflow.token.token_id}
+                    </div>
+                  </div>
+                )
+              }
+              <div className="h-full mt-2">
+                <div className="flex flex-row justify-between py-2">
+                  <div>Date:</div>
+                  <div>{new Date(selectedTx.timestamp*1000).toDateString()}</div>
+                </div>
+                <div className="flex flex-row justify-between py-2">
+                  <div>Fee:</div>
+                  <div>{selectedTx.fee.decimal} ML</div>
+                </div>
+                <div className="flex flex-row justify-between py-2">
+                  <div>Network:</div>
+                  <div>Mintlayer</div>
+                </div>
+
+                {/*<div className="whitespace-pre w-auto overflow-scroll">*/}
+                {/*  Details of tx: {JSON.stringify(selectedTx, null, 2)}*/}
+                {/*</div>*/}
+                <div className="text-center mt-6">
+                  <a href={`https://${isTestnet ? 'lovelace.' : ''}explorer.mintlayer.org/tx/${selectedTx?.txid}`}
+                     target="_blank"
+                     className="bg-mint-light rounded-xl w-48 py-3 px-4"
+                  >
+                    View in explorer
+                  </a>
+                </div>
+              </div>
+            </>
+          )
+        }
+
         <div className="w-auto">
-          <button className="bg-mint-light rounded-xl w-full py-3 px-4" onClick={()=>setSelectedTx(null)}>Close</button>
+          <button className="bg-mint-light rounded-xl w-full py-3 px-4" onClick={() => setSelectedTx(null)}>Close
+          </button>
         </div>
       </div>
 
