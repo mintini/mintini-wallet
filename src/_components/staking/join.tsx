@@ -80,7 +80,7 @@ export const JoinPool = ({ poolId }) => {
   }, [poolId, fee]);
 
   useEffect(() => {
-    if(transactionJSONrepresentation.inputs.length === 0 || transactionJSONrepresentation.outputs.length === 0) {
+    if(transactionJSONrepresentation.outputs.length === 0) {
       setFee(0n);
       setTransactionBINrepresentation({
         inputs: [],
@@ -236,7 +236,7 @@ export const JoinPool = ({ poolId }) => {
     }
   }
 
-  const disableJoinButton = tokens[0].balance < fee.toString() / 1e11 || fee === 0n;
+  const disableJoinButton = tokens[0].balance < fee.toString() / 1e11;
 
   return (
     <div>
