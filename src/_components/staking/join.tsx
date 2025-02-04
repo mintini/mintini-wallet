@@ -203,7 +203,7 @@ export const JoinPool = ({ poolId }) => {
     setState('broadcast');
     const transactionBody = transactionHEX;
     try {
-      const response = await fetch(`https://api-server${network===1?'-lovelace':''}.mintlayer.org/api/v2/transaction`, {
+      const response = await fetch(`https://api.mintini.app/transaction?${network===1?'network=1':'network=0'}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
