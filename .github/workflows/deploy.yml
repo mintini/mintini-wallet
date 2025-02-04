@@ -1,0 +1,41 @@
+name: Deploy Mintini Wallet to Vercel
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Generate SHA256 Hashes (with filenames)
+        run: |
+          find dist -type f -exec shasum -a 256 {} \; | sed 's#dist/##' > dist/build-hashes.txt
+          cat dist/build-hashes.txt
+
+      - name: Upload Hashes to GitHub Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-hashes
+          path: dist/build-hashes.txt
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
