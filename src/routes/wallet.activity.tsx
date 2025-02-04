@@ -8,17 +8,42 @@ import {getTransactionsByWallet} from "../lib/storage/database.ts";
 import {useDatabase} from "../context/Database.tsx";
 import {txToActivity} from "../lib/mintlayer/helpers.ts";
 
+const relativeTime = (time: number) => {
+  const now = new Date().getTime();
+  const diff = now - time;
+
+
+  const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+  // diffDays should
+
+  if(diffDays === 0) {
+    return 'Today';
+  }
+  if(diffDays === 1) {
+    return 'Yesterday';
+  }
+  return time.toDateString();
+}
+
 export const WalletActivity = () => {
   const { telegram } = useTelegram();
   const { db } = useDatabase();
   const { addresses, tokens: token_list, tokensLoading, network } = useMintlayer();
-  const [ showReceive, setShowReceive ] = useState(false);
   const { wallet, isTestnet } = useMintlayer();
-  const [ tab, setTab ] = useState(0);
-  const [ addressIndex, setAddressIndex ] = useState(0)
   const [ confirmedActivity, setActivity ] = useState<any>([]);
   const [ pendingTransactions, setPendingTransactions ] = useState<any>([]);
   const [ selectedTx, setSelectedTx ] = useState<any>(null);
+
+  const [ tokensList, setTokensList ] = useState<any>([]);
+
+  useEffect(() => {
+    const fetchTokens = async () => {
+      const response = await fetch('https://api.mintini.app/dex_tokens?network=' + network);
+      const data = await response.json();
+      setTokensList(data);
+    }
+    fetchTokens();
+  }, []);
 
   useEffect(() => {
     if (telegram) {
@@ -38,9 +63,14 @@ export const WalletActivity = () => {
     getPendingTransactions();
   }, [])
 
-  const TOKEN_LABELS = {
-    'Coin': 'ML',
-  };
+  const TOKEN_LABELS = tokensList.reduce((acc: any, token: any) => {
+    acc[token.token_id] = token.symbol;
+    return acc;
+  }, {});
+
+  TOKEN_LABELS.Coin = 'ML';
+
+  console.log('TOKEN_LABELS', TOKEN_LABELS);
 
   useEffect(() => {
     // fetch activity from endpoint
@@ -70,6 +100,10 @@ export const WalletActivity = () => {
     receive: 'bg-green-400',
     swap: 'bg-yellow-400',
     send_self: 'bg-blue-400',
+    unsupported: 'bg-gray-400',
+    delegation_withdrawal: 'bg-red-400',
+    delegation_staking: 'bg-green-400',
+    delegation_create: 'bg-green-400',
   }
 
   const ICON_MAP = {
@@ -77,10 +111,10 @@ export const WalletActivity = () => {
     receive: '↓',
     swap: '⇆',
     send_self: '↶',
-    unsupported: '❓',
-    delegation_withdrawal: '🔓',
-    delegation_staking: '🔒',
-    delegation_create: '🔒+',
+    unsupported: '?',
+    delegation_withdrawal: '↓',
+    delegation_staking: '↑',
+    delegation_create: '+',
   }
 
   const LABEL_MAP = {
@@ -91,7 +125,7 @@ export const WalletActivity = () => {
     unsupported: 'Unsupported',
     delegation_withdrawal: 'Delegation Withdrawal',
     delegation_staking: 'Delegation Staking',
-    delegation_create: 'Delegation Create',
+    delegation_create: 'Join Staking Pool',
   }
 
   const pendingActivity = txToActivity(pendingTransactions, addresses);
@@ -108,12 +142,12 @@ export const WalletActivity = () => {
             <>
               {index === 0 && (
                 <div className="text-center text-mint-dark">
-                  {date.toDateString()}
+                  {relativeTime(date)}
                 </div>
               )}
               {index > 0 && new Date(activity[index-1].timestamp*1000).getDate().toString() !== date.getDate().toString() && (
                 <div className="text-center text-mint-dark">
-                  {date.toDateString()}
+                  {relativeTime(date)}
                 </div>
               )}
               <div onClick={()=>setSelectedTx(item)} className="flex flex-row justify-between gap-2 bg-mint rounded-2xl px-4 py-3" key={index.txid}>
@@ -157,12 +191,12 @@ export const WalletActivity = () => {
                   <div className="text-right">
                     {
                       item.amount.inflow.total > 0 && (
-                        <div className="whitespace-nowrap flex flex-nowrap justify-end"><div>+{item.amount?.inflow?.total}</div> <div className="inline-block w-10 overflow-hidden">{TOKEN_LABELS[item.amount?.inflow?.token.token_id] || item.amount?.inflow?.token.token_id}</div></div>
+                        <div className="whitespace-nowrap flex flex-nowrap justify-end gap-1"><div>+{item.amount?.inflow?.total}</div><div className="inline-block overflow-hidden">{TOKEN_LABELS[item.amount?.inflow?.token.token_id] || item.amount?.inflow?.token.token_id}</div></div>
                       )
                     }
                     {
                       item.amount.outflow.total > 0 && (
-                        <div className="whitespace-nowrap flex flex-nowrap justify-end"><div>-{item.amount?.outflow?.total}</div> <div className="inline-block w-10 overflow-hidden">{TOKEN_LABELS[item.amount?.outflow?.token.token_id] || item.amount?.outflow?.token.token_id}</div></div>
+                        <div className="whitespace-nowrap flex flex-nowrap justify-end gap-1"><div>-{item.amount?.outflow?.total}</div><div className="inline-block overflow-hidden">{TOKEN_LABELS[item.amount?.outflow?.token.token_id] || item.amount?.outflow?.token.token_id}</div></div>
                       )
                     }
                   </div>

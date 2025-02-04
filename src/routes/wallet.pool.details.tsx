@@ -45,7 +45,7 @@ export const WalletPoolDetails = () => {
   const account_pools: AccountPool[] = delegations.map((delegation: Delegation) => {
     return {
       pool_id: delegation.pool_id,
-      pool_lablel: delegation.pool_id.slice(0, 6) + '...' +  delegation.pool_id.slice(-6),
+      pool_label: delegation.pool_id.slice(0, 6) + '...' +  delegation.pool_id.slice(-6),
       balance: delegation.balance.decimal,
       delegation_id: delegation.delegation_id,
       delegation_label: delegation.delegation_id.slice(0, 6) + '...' +  delegation.delegation_id.slice(-6),
@@ -56,9 +56,13 @@ export const WalletPoolDetails = () => {
 
   const my_delegations = account_pools.filter((pool) => pool.pool_id === poolId);
 
+  const my_delegations_balance = my_delegations.reduce((acc, pool: AccountPool) => {
+    return acc + parseFloat(pool.balance.toString());
+  }, 0);
+
   return (
     <>
-      <div className="fixed top-0 bottom-0 right-0 left-0  p-4 z-50">
+      <div className="fixed top-0 right-0 left-0  p-4 z-50">
         <div className="bg-mint h-full w-full flex flex-col justify-between">
           <div className="border-2 border-mint-light m-4 rounded p-4">
             <div>
@@ -72,14 +76,12 @@ export const WalletPoolDetails = () => {
                     Your delegation balance on this pool:
                   </div>
                   <div className="text-center text-2xl">
-                    {my_delegations.reduce((acc, pool: AccountPool) => {
-                      return acc + parseFloat(pool.balance.toString());
-                    }, 0)} ML
+                    {my_delegations_balance} ML
                   </div>
 
                   <div className="flex flex-row items-center justify-center my-4 px-4">
                     <button className={`w-full  border-2 border-mint-light ${action==='stake'?'bg-mint-light':'bg-mint border-mint-light '} py-2 rounded-l-2xl`} onClick={()=>setAction('stake')}>stake</button>
-                    <button className={`w-full  border-2 border-mint-light ${action==='withdraw'?'bg-mint-light':'bg-mint border-mint-light  '} py-2 rounded-r-2xl`} onClick={()=>setAction('withdraw')}>withdraw</button>
+                    <button className={`w-full  border-2 border-mint-light ${action==='withdraw'?'bg-mint-light':'bg-mint border-mint-light  '} py-2 rounded-r-2xl ${my_delegations_balance < 1 ? 'opacity-25':''}`} onClick={()=>my_delegations_balance > 0 && setAction('withdraw')}>withdraw</button>
                   </div>
 
                   {
@@ -100,7 +102,7 @@ export const WalletPoolDetails = () => {
                 </>
               ) : (
                 <div>
-                  <div className="my-2">
+                  <div className="my-2 text-black">
                     You don't have any delegation on this pool, need to join first
                   </div>
                   <JoinPool poolId={poolId} />

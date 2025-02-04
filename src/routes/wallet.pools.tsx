@@ -63,22 +63,24 @@ export const WalletPools = () => {
     return !account_pools.some((account_pool) => account_pool.pool_id === pool.pool_id);
   }
 
+  const poolToOpen = account_pools[0] || pools[0];
+
   return (
     <>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 mt-3">
         <div className="flex flex-col items-center justify-center">
           <div className="text-black text-xl font-light">Total Staked Value</div>
           <div className="text-4xl font-medium">0.00$</div>
-          <div className="text-4xl font-medium">{total_balance} ML</div>
+          <div className="text-xl">{total_balance} ML</div>
         </div>
 
         <div className="flex flex-row gap-4 mx-4 justify-center">
-          <Link to="/wallet/send" className="border border-mint-dark px-6 py-3 rounded-xl">
+          <Link to={`/wallet/pools/` + poolToOpen?.pool_id} className="border border-mint-dark px-6 py-3 rounded-xl">
             Stake
           </Link>
-          <div className="border border-mint-dark px-6 py-3 rounded-xl">
-            Widthdraw
-          </div>
+          {/*<div className="border border-mint-dark px-6 py-3 rounded-xl">*/}
+          {/*  Widthdraw*/}
+          {/*</div>*/}
         </div>
       </div>
 
@@ -88,7 +90,11 @@ export const WalletPools = () => {
         </div>
       </div>
 
-      <div className="px-4" onClick={handleToggleLowBalance}>{ hideLowBalance ? 'toggle low balance pools' : 'toggle low balance pools' }</div>
+      <div className="px-4 py-2 hidden">
+        <button className="px-4 py-2 bg-mint text-white rounded-2xl" onClick={handleToggleLowBalance}>
+          { hideLowBalance ? 'toggle low balance pools' : 'toggle low balance pools' }
+        </button>
+      </div>
 
       {account_pools.filter(lowBalance).map((pool, index) => (
         <div key={index} onClick={handlePoolClick(pool.pool_id)} className="mx-4 bg-white rounded-xl p-4 mb-4">
@@ -107,14 +113,6 @@ export const WalletPools = () => {
               </div>
               <div>
                 {pool.balance} ML
-              </div>
-            </div>
-            <div>
-              <div className="text-mint-dark font-bold">
-                Delegation
-              </div>
-              <div>
-                {pool.delegation_id}
               </div>
             </div>
           </div>

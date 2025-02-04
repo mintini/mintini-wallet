@@ -52,6 +52,14 @@ export const DelegationStake = ({ delegationId }) => {
       return;
     }
 
+    if(amountDecimal > tokens[0].balance) {
+      setTransactionJSONrepresentation({
+        inputs: [],
+        outputs: [],
+      })
+      return;
+    }
+
     const amountCoin = stakeAmount;
 
     // start to prepare transaction by selecting UTXOs
@@ -255,17 +263,28 @@ export const DelegationStake = ({ delegationId }) => {
 
   const handleSetAmount = (percent: number) => () => {
     const total = tokens[0].balance;
-    const amount = total * percent;
+    let amount = total * percent;
+    if(percent === 1){
+      amount = total - fee.toString() / 1e11;
+    }
     setAmountDecimal(amount);
   }
+
+  const submitDisabled = amountDecimal === 0 || amountDecimal + fee.toString()/1e11 > tokens[0].balance || state === 'broadcast';
+
+  useEffect(() => {
+    if(amountDecimal + fee.toString()/1e11 > tokens[0].balance){
+      handleSetAmount(1)();
+    }
+  }, [amountDecimal, fee, tokens]);
 
   return (
     <div>
       <div>
-        <div>
+        <div className="bg-mint-light py-4 px-4 rounded-2xl">
           <input type="text" inputMode="decimal" onChange={handleUpdateAmount} value={amountDecimal || ''}
                  placeholder="0"
-                 className="text-3xl bg-transparent w-full  placeholder:text-mint-light text-white"/>
+                 className="text-3xl bg-transparent w-full  placeholder:text-mint outline-0 text-black"/>
         </div>
         <div className="flex flex-row justify-between">
           <div>
@@ -273,7 +292,7 @@ export const DelegationStake = ({ delegationId }) => {
           </div>
           <div className="flex flex-row justify-between gap-4 mt-1">
             <div>
-              {tokens[0].balance}
+              {Math.trunc(tokens[0].balance) !== tokens[0].balance ? '~' : ''} {Math.trunc(tokens[0].balance)} ML
             </div>
             <button className="rounded-full bg-mint-dark px-2 text-white" onClick={handleSetAmount(0.25)}>
               25%
@@ -288,20 +307,23 @@ export const DelegationStake = ({ delegationId }) => {
         </div>
       </div>
 
-      <div>
-        Fee: {fee.toString() / 1e11}
-      </div>
-
       {
         state === 'form' && (
           <>
             <div className="py-4">
-              <div onClick={toggleTransactionPreview} className="text-black">Toggle transaction preview</div>
+              <div onClick={toggleTransactionPreview} className="text-black text-right">Toggle transaction preview</div>
               <div
                 className={`${transactionPreview ? 'block' : 'hidden'} max-h-52 overflow-auto whitespace-pre font-mono`}>{JSON.stringify(transactionJSONrepresentation, null, 2)}</div>
             </div>
 
-            <button onClick={handleBuildTransaction} className="bg-mint-light px-4 py-2 rounded-2xl">Send</button>
+            <div className="flex flex-row items-center gap-2">
+              <button disabled={submitDisabled} onClick={handleBuildTransaction}
+                      className={`bg-mint-light ${submitDisabled ? 'opacity-20' : ''} px-4 py-2 rounded-2xl`}>Send
+              </button>
+              <div>
+                Fee: {fee.toString() / 1e11} ML
+              </div>
+            </div>
           </>
         )
       }

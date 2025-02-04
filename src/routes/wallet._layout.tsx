@@ -31,12 +31,12 @@ export const WalletLayout = () => {
           </div>
         </div>
         <div className="flex flex-row gap-6 items-center justify-center">
-          <div className="flex items-center">
-            <Link className="text-3xl rounded-2xl relative w-8 h-8" to="/notifications">
-              {/*<span className="absolute block -top-1 -right-1 w-3 h-3 rounded-full z-10 bg-red-400"></span>*/}
-              <img className={"w-8 h-8 mix-blend-multiply"} src="/icons/ring.png" alt="Notifications"/>
-            </Link>
-          </div>
+          {/*<div className="flex items-center">*/}
+          {/*  <Link className="text-3xl rounded-2xl relative w-8 h-8" to="/notifications">*/}
+          {/*    /!*<span className="absolute block -top-1 -right-1 w-3 h-3 rounded-full z-10 bg-red-400"></span>*!/*/}
+          {/*    <img className={"w-8 h-8 mix-blend-multiply"} src="/icons/ring.png" alt="Notifications"/>*/}
+          {/*  </Link>*/}
+          {/*</div>*/}
           <div className="flex items-center">
             <Link className="text-3xl  rounded-2xl relative" to="/settings">
               <img className={"w-8 h-8 mix-blend-multiply"} src="/icons/settings.png" alt="Notifications"/>

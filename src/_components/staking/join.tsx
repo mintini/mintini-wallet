@@ -238,19 +238,22 @@ export const JoinPool = ({ poolId }) => {
 
   return (
     <div>
-      <div className="text-xl">Join Pool</div>
-      <div className="inline-block px-2 py-1 border-mint-light border-2 rounded">Fee: {fee.toString() / 1e11} ML</div>
-
       {
         state === 'form' && (
           <>
             <div className="py-4">
-              <div onClick={toggleTransactionPreview} className="text-black">Toggle transaction preview</div>
+              <div onClick={toggleTransactionPreview} className="text-black underline text-right">Toggle transaction preview</div>
               <div
                 className={`${transactionPreview ? 'block' : 'hidden'} max-h-52 overflow-auto whitespace-pre font-mono`}>{JSON.stringify(transactionJSONrepresentation, null, 2)}</div>
             </div>
 
-            <button onClick={handleBuildTransaction} className="bg-mint-light px-4 py-2 rounded-2xl">Join</button>
+            <div>
+              <button onClick={handleBuildTransaction} className="bg-mint-light px-4 py-2 rounded-2xl">Join</button>
+
+              <div
+                className="inline-block px-2 py-1 font-normal italic">Fee: {fee.toString() / 1e11} ML
+              </div>
+            </div>
           </>
         )
       }
@@ -259,9 +262,12 @@ export const JoinPool = ({ poolId }) => {
         state === 'confirm' && (
           <>
             <div className="py-4">
-              <div onClick={toggleTransactionPreview} className="text-black">Toggle transaction hex</div>
+              <div onClick={toggleTransactionPreview} className="text-black text-right">Toggle transaction hex</div>
               <div
                 className={`${transactionPreview ? 'block' : 'hidden'} max-h-52 overflow-auto break-all font-mono`}>{transactionHEX}</div>
+            </div>
+            <div
+              className="inline-block py-1 font-normal italic">Fee: {fee.toString() / 1e11} ML
             </div>
             <div className="flex flex-row gap-4 w-full">
               <button onClick={handleBroadcast} className="bg-mint-light px-4 py-2 rounded-2xl w-full">Confirm</button>

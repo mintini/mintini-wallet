@@ -113,7 +113,7 @@ export const WalletMain = () => {
             )
           }
 
-          <div className="grid grid-cols-3 gap-4 mt-4 justify-center ">
+          <div className="grid grid-cols-4 gap-4 mt-4 justify-center ">
             <div className="bg-mint border-mint-dark px-6 pt-5 pb-3 rounded-xl flex items-center flex-col"
                  onClick={handleShowReceive}>
               <img src='/icons/qr-code-scanner.svg' className="w-8 h-8" alt="qr-code-scanner"/>
@@ -126,6 +126,10 @@ export const WalletMain = () => {
             <Link to="/wallet/dex" className="bg-mint border-mint-dark px-6 pt-5 pb-3 rounded-xl flex items-center flex-col">
               <img src='/icons/swap.svg' className="w-8 h-8" alt="qr-code-scanner"/>
               Swap
+            </Link>
+            <Link to="/wallet/pools" className="bg-mint border-mint-dark px-6 pt-5 pb-3 rounded-xl flex items-center flex-col">
+              <img src='/icons/grow.svg' className="w-8 h-8" alt="qr-code-scanner"/>
+              Stake
             </Link>
           </div>
         </div>

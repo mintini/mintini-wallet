@@ -242,16 +242,18 @@ export const DelegationWithdraw = ({delegations}) => {
     setAmountDecimal(amount);
   }
 
+  const submitDisabled = selectedDelegations.length === 0 || withdrawAmount === 0n || amountDecimal > total_balance;
+
   return (
     <div>
-      <div>{delegations.map((d) => (d.delegation_label)).join(',')}</div>
-      <div>Selected: {selectedDelegations.map((d) => (d.delegation_label)).join(',')}</div>
+      {/*<div>{delegations.map((d) => (d.delegation_label)).join(',')}</div>*/}
+      {/*<div>Selected: {selectedDelegations.map((d) => (d.delegation_label)).join(',')}</div>*/}
 
       <div>
-        <div>
+        <div className="bg-mint-light py-4 px-4 rounded-2xl">
           <input type="text" inputMode="decimal" onChange={handleUpdateAmount} value={amountDecimal || ''}
                  placeholder="0"
-                 className="text-3xl bg-transparent w-full  placeholder:text-mint-light text-white"/>
+                 className="text-3xl bg-transparent w-full  placeholder:text-mint outline-0 text-black"/>
         </div>
         <div className="flex flex-row justify-between">
           <div>
@@ -259,7 +261,7 @@ export const DelegationWithdraw = ({delegations}) => {
           </div>
           <div className="flex flex-row justify-between gap-4 mt-1">
             <div>
-              {total_balance}
+              {Math.trunc(total_balance) !== total_balance ? '~' : ''} {Math.trunc(total_balance)} ML
             </div>
             <button className="rounded-full bg-mint-dark px-2 text-white" onClick={handleSetAmount(0.25)}>
               25%
@@ -274,20 +276,20 @@ export const DelegationWithdraw = ({delegations}) => {
         </div>
       </div>
 
-      <div>
-        Fee: {fee.toString() / 1e11}
-      </div>
-
       {
         state === 'form' && (
           <>
             <div className="py-4">
-              <div onClick={toggleTransactionPreview} className="text-black">Toggle transaction preview</div>
+              <div onClick={toggleTransactionPreview} className="text-black text-right">Toggle transaction preview</div>
               <div
                 className={`${transactionPreview ? 'block' : 'hidden'} max-h-52 overflow-auto whitespace-pre font-mono`}>{JSON.stringify(transactionJSONrepresentation, null, 2)}</div>
             </div>
-
-            <button onClick={handleBuildTransaction} className="bg-mint-light px-4 py-2 rounded-2xl">Withdraw</button>
+            <div className="items-center flex flex-row gap-2">
+              <button disabled={submitDisabled} onClick={handleBuildTransaction} className={`bg-mint-light ${submitDisabled ? 'opacity-20' : ''} px-4 py-2 rounded-2xl`}>Withdraw</button>
+              <div>
+                Fee: {fee.toString() / 1e11} ML
+              </div>
+            </div>
           </>
         )
       }
