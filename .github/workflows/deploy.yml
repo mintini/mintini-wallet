@@ -9,6 +9,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -33,6 +36,31 @@ jobs:
         with:
           name: build-hashes
           path: dist/build-hashes.txt
+
+      - name: Create Release Tag
+        id: create_tag
+        run: |
+          VERSION="v$(date +'%Y.%m.%d-%H%M%S')"
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          git tag $VERSION
+          git push origin $VERSION
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.RELEASE_VERSION }}
+          name: "Release ${{ env.RELEASE_VERSION }}"
+          body: |
+            ## 🔥 Mintini Wallet Release ${{ env.RELEASE_VERSION }}
+            ✅ **Deployed to Vercel**: [View Deployment](https://mintini.vercel.app)
+            
+            📜 **SHA256 File Hashes**:
+            ```
+            $(cat dist/build-hashes.txt)
+            ```
+          files: dist/build-hashes.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Vercel CLI
         run: npm install -g vercel
