@@ -16,7 +16,8 @@ export const WalletMain = () => {
     addresses,
     tokens: token_list,
     // tokensLoading,
-    isTestnet
+    isTestnet,
+    unconfirmedTokens,
   } = useMintlayer();
   const [ showReceive, setShowReceive ] = useState(false);
   // const [ tab, setTab ] = useState(0);
@@ -112,6 +113,8 @@ export const WalletMain = () => {
               </div>
             )
           }
+
+          {JSON.stringify(unconfirmedTokens)}
 
           <div className="grid grid-cols-4 gap-4 mt-4 justify-center ">
             <div className="bg-mint border-mint-dark px-6 pt-5 pb-3 rounded-xl flex items-center flex-col"

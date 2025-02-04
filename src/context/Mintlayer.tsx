@@ -38,6 +38,8 @@ export const MintlayerProvider  = ({ children }) => {
   const [tokens, setTokens] = useState([]);
   const [tokensLoading, setTokensLoading] = useState(false);
 
+  const [unconfirmedTokens, setUnconfirmedTokens] = useState([]);
+
   const [chainHeight, setChainHeight] = useState(0);
   const [lastBlockTime, setLastBlockTime] = useState(0);
 
@@ -263,6 +265,17 @@ export const MintlayerProvider  = ({ children }) => {
     return true;
   };
 
+  // useEffect(() => {
+  //   //
+  //   const newUnconfirmedTokens = [];
+  //
+  //   tokens.forEach(token => {
+  //     newUnconfirmedTokens.push(token);
+  //   })
+  //
+  //   setUnconfirmedTokens(newUnconfirmedTokens);
+  // }, [tokens, pendingTransactions]);
+
   const value = {
     ml,
     addresses,
@@ -287,6 +300,8 @@ export const MintlayerProvider  = ({ children }) => {
 
     delegations,
     lastBlockTime,
+
+    unconfirmedTokens,
   }
 
   return (
