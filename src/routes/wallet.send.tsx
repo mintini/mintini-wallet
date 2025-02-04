@@ -25,6 +25,8 @@ export const WalletSend = () => {
 
   const [ sendToken, setSendToken ] = useState(null);
 
+  const [ txPreviewDetails, setTxPreviewDetails ] = useState(false);
+
   const { tokens, utxos, network, addresses, addressesPrivateKeys, wallet, refreshAccount } = useMintlayer();
   const [ state, setState ] = useState('form');
   const [ recipient, setRecipient ] = useState('');
@@ -48,6 +50,10 @@ export const WalletSend = () => {
   const [ transactionBINrepresentation, setTransactionBINrepresentation ] = useState({inputs: [], outputs: []});
 
   const valid = recipientError === '' && recipient !== '' && amountError === '' && amount > 0;
+
+  const toggleTxPreviewDetails = () => {
+    setTxPreviewDetails(!txPreviewDetails);
+  }
 
   useEffect(() => {
     // if only one token, select it
@@ -423,47 +429,52 @@ export const WalletSend = () => {
                 </div>
 
                 <div>
-                  <div className="text-xl">
-                    Transaction details
+                  <div className="text-xl" onClick={toggleTxPreviewDetails}>
+                    Transaction details {txPreviewDetails ? '▲' : '▼'}
                   </div>
-                  <div>
-                    <div className="text-sm">
-                      Inputs
-                    </div>
-                    <div>
-                      {
-                        transactionJSONrepresentation.inputs.map((input: any, index: number) => (
-                          <div key={index}>
-                            <div className="break-all">{input.outpoint.source_id}:{input.outpoint.index}</div>
-                            <div>{input.utxo.value.amount.decimal} ML</div>
+                  {
+                    txPreviewDetails && (
+                      <>
+                        <div>
+                          <div className="text-sm">
+                            Inputs
                           </div>
-                        ))
-                      }
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm">
-                      Outputs
-                    </div>
-                    <div>
-                      {
-                        transactionJSONrepresentation.outputs.map((output: any, index: number) => (
-                          <div key={index}>
-                            <div>{output.destination}</div>
-                            <div>{output.value.amount.decimal} ML</div>
+                          <div>
+                            {
+                              transactionJSONrepresentation.inputs.map((input: any, index: number) => (
+                                <div key={index}>
+                                  <div className="break-all">{input.outpoint.source_id}:{input.outpoint.index}</div>
+                                  <div>{input.utxo.value.amount.decimal} ML</div>
+                                </div>
+                              ))
+                            }
                           </div>
-                        ))
-                      }
-                    </div>
-                  </div>
-                  {/*<div>*/}
-                  {/*  <div>*/}
-                  {/*    HEX:*/}
-                  {/*  </div>*/}
-                  {/*  <div className="break-all">*/}
-                  {/*    {transactionHEX}*/}
-                  {/*  </div>*/}
-                  {/*</div>*/}
+                        </div>
+                        <div>
+                          <div className="text-sm">
+                            Outputs
+                          </div>
+                          <div>
+                            {
+                              transactionJSONrepresentation.outputs.map((output: any, index: number) => (
+                                <div key={index}>
+                                  <div>{output.destination}</div>
+                                  <div>{output.value.amount.decimal} ML</div>
+                                </div>
+                              ))
+                            }
+                          </div>
+                        </div>
+                        {/*<div>*/}
+                        {/*  <div>*/}
+                        {/*    HEX:*/}
+                        {/*  </div>*/}
+                        {/*  <div className="break-all">*/}
+                        {/*    {transactionHEX}*/}
+                        {/*  </div>*/}
+                        {/*</div>*/}
+                      </>
+                    )}
                 </div>
               </div>
 

@@ -25,6 +25,8 @@ export const WalletDex = () => {
 
   const [nonceAdjust, setNonceAdjust] = useState(0);
 
+  const [txPreviewDetails, setTxPreviewDetails] = useState(false);
+
   const [sellError, setSellError] = useState('');
 
   const [fee, setFee] = useState(0n);
@@ -48,6 +50,9 @@ export const WalletDex = () => {
   const [ tokenSellSelectorOpened, setTokenSellSelectorOpened ] = useState(false);
   const [ tokenBuySelectorOpened, setTokenBuySelectorOpened ] = useState(false);
 
+  const toggleTxPreviewDetails = () => {
+    setTxPreviewDetails(!txPreviewDetails);
+  }
 
   useEffect(() => {
     if(tokens[0]?.balance < sell) {
@@ -602,61 +607,67 @@ export const WalletDex = () => {
               </div>
 
               <div>
-                <div className="text-xl">
-                  Transaction details
+                <div className="text-xl" onClick={toggleTxPreviewDetails}>
+                  Transaction details {txPreviewDetails ? '▲' : '▼'}
                 </div>
-                <div className="whitespace-pre">
-                  {JSON.stringify(transactionJSONrepresentation, null, 2)}
-                </div>
-                <div>
-                  <div className="text-sm">
-                    Inputs
-                  </div>
-                  <div>
-                    {
-                      transactionJSONrepresentation.inputs.map((input: any, index: number) => (
-                        <>
-                          {
-                            input.utxo ? (
-                              <div key={index}>
-                                <div className="break-all">{input.outpoint.source_id}:{input.outpoint.index}</div>
-                                <div>{input.utxo.value.amount.decimal} ML</div>
-                              </div>
-                            ) : (
-                              <div key={index}>
-                                <div className="break-all">Command</div>
-                                <div>{JSON.stringify(input)}</div>
-                              </div>
-                            )
-                          }
-                        </>
-                      ))
-                    }
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm">
-                  Outputs
-                  </div>
-                  <div>
-                    {
-                      transactionJSONrepresentation.outputs.map((output: any, index: number) => (
-                        <div key={index}>
-                          <div>{output.destination}</div>
-                          <div>{output.value.amount.decimal} ML</div>
+                {
+                  txPreviewDetails && (
+                    <>
+                      <div className="whitespace-pre w-full overflow-scroll">
+                        {JSON.stringify(transactionJSONrepresentation, null, 2)}
+                      </div>
+                      <div>
+                        <div className="text-sm">
+                          Inputs
                         </div>
-                      ))
-                    }
-                  </div>
-                </div>
-                <div>
-                  <div>
-                    HEX:
-                  </div>
-                  <div className="break-all bg-amber-200 rounded-3xl p-2">
-                    {transactionHEX}
-                  </div>
-                </div>
+                        <div>
+                          {
+                            transactionJSONrepresentation.inputs.map((input: any, index: number) => (
+                              <>
+                                {
+                                  input.utxo ? (
+                                    <div key={index}>
+                                      <div className="break-all">{input.outpoint.source_id}:{input.outpoint.index}</div>
+                                      <div>{input.utxo.value.amount.decimal} ML</div>
+                                    </div>
+                                  ) : (
+                                    <div key={index}>
+                                      <div className="break-all">Command</div>
+                                      <div>{JSON.stringify(input)}</div>
+                                    </div>
+                                  )
+                                }
+                              </>
+                            ))
+                          }
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm">
+                          Outputs
+                        </div>
+                        <div>
+                          {
+                            transactionJSONrepresentation.outputs.map((output: any, index: number) => (
+                              <div key={index}>
+                                <div>{output.destination}</div>
+                                <div>{output.value.amount.decimal} ML</div>
+                              </div>
+                            ))
+                          }
+                        </div>
+                      </div>
+                      <div>
+                        <div>
+                          HEX:
+                        </div>
+                        <div className="break-all bg-amber-200 rounded-3xl p-2">
+                          {transactionHEX}
+                        </div>
+                      </div>
+                    </>
+                  )
+                }
               </div>
             </div>
 

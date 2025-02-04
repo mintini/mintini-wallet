@@ -17,7 +17,7 @@ export const JoinPool = ({ poolId }) => {
   const [ state, setState ] = useState('form');
   const [ transactionBroadcastingStatus, setTransactionBroadcastingStatus ] = useState('');
   const { db } = useDatabase();
-  const { utxos, network, addresses, addressesPrivateKeys, wallet, refreshAccount } = useMintlayer();
+  const { utxos, network, addresses, addressesPrivateKeys, wallet, refreshAccount, tokens } = useMintlayer();
 
   const [ transactionHEX, setTransactionHEX ] = useState('');
 
@@ -236,6 +236,8 @@ export const JoinPool = ({ poolId }) => {
     }
   }
 
+  const disableJoinButton = tokens[0].balance < fee.toString() / 1e11 || fee === 0n;
+
   return (
     <div>
       {
@@ -248,12 +250,17 @@ export const JoinPool = ({ poolId }) => {
             </div>
 
             <div>
-              <button onClick={handleBuildTransaction} className="bg-mint-light px-4 py-2 rounded-2xl">Join</button>
+              <button disabled={disableJoinButton} onClick={handleBuildTransaction} className={`${disableJoinButton?'opacity-20':''} bg-mint-light px-4 py-2 rounded-2xl`}>Join</button>
 
               <div
-                className="inline-block px-2 py-1 font-normal italic">Fee: {fee.toString() / 1e11} ML
+                className="inline-block px-2 py-1 font-normal italic">Fee: {fee === 0n ? '~0.229' : fee.toString() / 1e11} ML
               </div>
             </div>
+            {
+              disableJoinButton && (
+                <div>Insufficient funds</div>
+              )
+            }
           </>
         )
       }
