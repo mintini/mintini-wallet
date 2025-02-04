@@ -5,10 +5,10 @@ const ProtectedRoute = () => {
   const { encryptionKey } = useEncryptionKey();
 
   if (!encryptionKey) {
-    return <Navigate to="/" replace />; // Перенаправляем на страницу логина
+    return <Navigate to="/" replace />;
   }
 
-  return <Outlet />; // Продолжаем рендерить защищённые маршруты
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

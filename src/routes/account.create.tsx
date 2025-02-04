@@ -53,11 +53,10 @@ export function AccountCreate () {
   const handleCreate = async () => {
     try {
       const walletIndex = wallets.length + 1;
-      // Сохраняем новый кошелек
       const wallet: Wallet = {
         id: Date.now().toString(),
         name: 'Account ' + walletIndex,
-        seedPhrase: seed, // Сид-фраза или автогенерация
+        seedPhrase: seed,
       };
       if(!db) {
         setError('База данных недоступна');
@@ -70,7 +69,7 @@ export function AccountCreate () {
       await saveWallet(db, wallet, password);
       await getWallets();
 
-      navigate('/wallet'); // Переходим к списку кошельков
+      navigate('/wallet');
     } catch (error) {
       console.log(error);
       setError('Ошибка создания кошелька');

@@ -23,10 +23,10 @@ export const setupDatabase = async (): Promise<IDBPDatabase<DatabaseSchema>> => 
   return openDB<DatabaseSchema>('mintiniWalletDB', 4, {
     upgrade(db) {
       if (!db.objectStoreNames.contains('state')) {
-        db.createObjectStore('state', { keyPath: 'key' }); // Магазин для хранения состояния
+        db.createObjectStore('state', { keyPath: 'key' });
       }
       if (!db.objectStoreNames.contains('accounts')) {
-        db.createObjectStore('accounts', { keyPath: 'id' }); // Для аккаунтов
+        db.createObjectStore('accounts', { keyPath: 'id' });
       }
       if (!db.objectStoreNames.contains('transactions')) {
         db.createObjectStore('transactions', { keyPath: 'id' });

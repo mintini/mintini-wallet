@@ -37,11 +37,10 @@ export function AccountImport () {
 
   const handleImport = async () => {
     try {
-      // Сохраняем новый кошелек
       const wallet: Wallet = {
         id: Date.now().toString(),
         name: 'Imported Wallet',
-        seedPhrase: seed, // Сид-фраза или автогенерация
+        seedPhrase: seed,
       };
       if(!db) {
         setError('База данных недоступна');
@@ -54,7 +53,7 @@ export function AccountImport () {
       await saveWallet(db, wallet, password);
       await getWallets();
 
-      navigate('/wallet'); // Переходим к списку кошельков
+      navigate('/wallet');
     } catch (error) {
       console.log(error);
       setError('Ошибка импорта кошелька');

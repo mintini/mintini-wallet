@@ -8,7 +8,7 @@ export function Onboarding() {
 
   const completeOnboarding = async () => {
     await db.put('state', { key: 'onboardingComplete', value: true });
-    navigate('/'); // Перенаправляем на главную страницу
+    navigate('/');
   };
 
   const STEPS = [

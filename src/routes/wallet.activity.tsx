@@ -70,8 +70,6 @@ export const WalletActivity = () => {
 
   TOKEN_LABELS.Coin = 'ML';
 
-  console.log('TOKEN_LABELS', TOKEN_LABELS);
-
   useEffect(() => {
     // fetch activity from endpoint
     const fetchActivity = async () => {

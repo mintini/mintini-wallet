@@ -45,7 +45,7 @@ const mainLoader = async () => {
     throw redirect('/onboarding');
   }
 
-  return { db, firstRun }; // Передаем базу данных в компонент
+  return { db, firstRun };
 };
 
 const onboardingLoader = async () => {

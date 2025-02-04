@@ -4,7 +4,7 @@ import { loadWallets } from '../lib/storage/database';
 import { useEncryptionKey } from "../context/EncryptionKey.tsx";
 
 const Login = () => {
-  const { db, firstRun } = useLoaderData(); // Получаем базу данных из loader
+  const { db, firstRun } = useLoaderData();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -26,26 +26,26 @@ const Login = () => {
     }
 
     if (password.length < 4) {
-      setError('Пароль должен быть не менее 4 символов');
+      setError('The password must be at least 4 characters long');
       return;
     }
 
     try {
       if (!db) {
-        setError('База данных недоступна');
+        setError('The database is unavailable');
         return;
       }
 
-      setEncryptionKey(password); // Сохраняем ключ в контексте
+      setEncryptionKey(password);
       const wallets = await loadWallets(db, password);
 
       if (wallets.length === 0) {
-        navigate('/start'); // Переход к созданию/импорту кошелька
+        navigate('/start');
       } else {
-        navigate('/wallet'); // Переход к кошелькам
+        navigate('/wallet');
       }
     } catch (error) {
-      setError('Ошибка загрузки кошельков или неверный ключ');
+      setError('Error loading wallets or invalid key');
     }
   };
 
