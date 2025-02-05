@@ -25,6 +25,8 @@ export const WalletSend = () => {
 
   const [ sendToken, setSendToken ] = useState(null);
 
+  const [ amountFocused, setAmountFocused ] = useState(false);
+
   const [ txPreviewDetails, setTxPreviewDetails ] = useState(false);
 
   const { tokens, utxos, network, addresses, addressesPrivateKeys, wallet, refreshAccount } = useMintlayer();
@@ -264,6 +266,7 @@ export const WalletSend = () => {
   }
 
   const handleBuildTransaction = () => {
+    handleBlur();
     setState('confirm');
 
     const inputsArray = transactionBINrepresentation.inputs;
@@ -335,6 +338,29 @@ export const WalletSend = () => {
     });
   }
 
+  const handleFocus = () => {
+    setAmountFocused(true);
+  }
+
+  const handleBlur = () => {
+    setAmountFocused(false);
+  }
+
+  const handleSetSend = (percent: number) => () => {
+    if(percent === 1){
+      setAmountDecimal(available.toString() - fee.toString() / 1e11);
+      return;
+    }
+
+    setAmountDecimal((available * percent).toString());
+  }
+
+  useEffect(() => {
+    if(amountDecimal + fee.toString()/1e11 > tokens[0].balance){
+      handleSetSend(1)();
+    }
+  }, [amountDecimal, fee, tokens]);
+
   return (
     <div className="relative">
 
@@ -360,7 +386,7 @@ export const WalletSend = () => {
 
               <div>
                 <div className="relative">
-                  <input type="text" inputmode="decimal" onChange={handleUpdateAmount} value={amountDecimal || ''} className="border border-mint-dark w-full rounded-xl px-4 py-4" placeholder="Amount"/>
+                  <input type="text" inputmode="decimal" onFocus={handleFocus} onChange={handleUpdateAmount} value={amountDecimal || ''} className="border border-mint-dark w-full rounded-xl px-4 py-4" placeholder="Amount"/>
                   <div className="absolute right-0 top-0 text-xl py-4 px-4">{symbol}</div>
                 </div>
                 <div className="flex justify-between">
@@ -526,6 +552,18 @@ export const WalletSend = () => {
         {/*  JSON.stringify(transactionJSONrepresentation, null, 2)*/}
         {/*}*/}
         {/*</div>*/}
+
+        {
+          amountFocused && (
+            <div
+              className="fixed bottom-0 left-0 right-0 h-16 bg-mint-light z-50 flex flex-row justify-around items-center">
+              <div className="bg-mint px-4 py-2 rounded-xl font-bold text-white " onClick={handleSetSend(0.25)}>25%</div>
+              <div className="bg-mint px-4 py-2 rounded-xl font-bold text-white " onClick={handleSetSend(0.5)}>50%</div>
+              <div className="bg-mint px-4 py-2 rounded-xl font-bold text-white " onClick={handleSetSend(1)}>Maximum</div>
+              <div className="text-black font-black px-4" onClick={handleBlur}>Done</div>
+            </div>
+          )
+        }
       </div>
     </div>
   )
