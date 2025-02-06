@@ -231,7 +231,7 @@ export const DelegationStake = ({ delegationId }) => {
       const response = await fetch(`https://api.mintini.app/transaction?${network===1?'network=1':'network=0'}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'plain/text',
         },
         body: transactionBody,
       });
