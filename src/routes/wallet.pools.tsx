@@ -44,6 +44,11 @@ export const WalletPools = () => {
       pool_id: pool.pool_id,
       pool_label: pool.pool_id.slice(0, 6) + '...' + pool.pool_id.slice(-6),
       pledge: Math.ceil(pool.balance) + ' ML',
+      cost_per_block: pool.cost_per_block,
+      delegations_count: pool.delegations_count,
+      delegations_amount: pool.delegations_amount,
+      margin_ratio_per_thousand: pool.margin_ratio_per_thousand,
+      margin_ratio: pool.margin_ratio,
     }
   });
 
@@ -64,6 +69,10 @@ export const WalletPools = () => {
   }
 
   const poolToOpen = account_pools[0] || pools[0];
+
+  const additionalFilters = () => {
+    return true;
+  }
 
   return (
     <>
@@ -130,7 +139,7 @@ export const WalletPools = () => {
         </div>
       </div>
 
-      {pools.filter(filterMyPools).map((pool, index) => (
+      {pools.filter(filterMyPools).filter(additionalFilters).map((pool, index) => (
         <div key={index} onClick={handlePoolClick(pool.pool_id)} className="mx-4 bg-white rounded-xl p-4 mb-4">
           <div className="flex flex-row justify-between">
             <div>
@@ -157,7 +166,7 @@ export const WalletPools = () => {
         <div className="w-20 h-1 bg-mint-dark rounded"></div>
       </div>
 
-      <Outlet key={location.pathname} />
+      <Outlet context={{pools}} key={location.pathname} />
     </>
   )
 }
