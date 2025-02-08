@@ -18,7 +18,6 @@ interface DatabaseSchema {
   accounts: Wallet;
 }
 
-// Настраиваем базу данных
 export const setupDatabase = async (): Promise<IDBPDatabase<DatabaseSchema>> => {
   return openDB<DatabaseSchema>('mintiniWalletDB', 4, {
     upgrade(db) {
@@ -34,6 +33,16 @@ export const setupDatabase = async (): Promise<IDBPDatabase<DatabaseSchema>> => 
     },
   });
 };
+
+export const changeAccountName = async (db: IDBPDatabase<DatabaseSchema>, walletId: string, newName: string): Promise<void> => {
+  const tx = db.transaction('accounts', 'readwrite');
+  const account = await tx.store.get(walletId);
+  if (account) {
+    account.name = newName;
+    await tx.store.put(account);
+  }
+  await tx.done;
+}
 
 // Устанавливаем состояние
 export const setState = async (db: IDBPDatabase<DatabaseSchema>, key: string, value: any): Promise<void> => {
