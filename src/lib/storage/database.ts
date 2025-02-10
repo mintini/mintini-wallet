@@ -4,6 +4,7 @@ import { encryptData, decryptData, generateKeyFromPassword } from '../crypto';
 interface Wallet {
   id: string;
   name: string;
+  avatar?: string;
   seedPhrase: string;
   cipherText?: string;
   iv?: string;
@@ -18,7 +19,6 @@ interface DatabaseSchema {
   accounts: Wallet;
 }
 
-// Настраиваем базу данных
 export const setupDatabase = async (): Promise<IDBPDatabase<DatabaseSchema>> => {
   return openDB<DatabaseSchema>('mintiniWalletDB', 4, {
     upgrade(db) {
@@ -34,6 +34,32 @@ export const setupDatabase = async (): Promise<IDBPDatabase<DatabaseSchema>> => 
     },
   });
 };
+
+export const changeAccountName = async (db: IDBPDatabase<DatabaseSchema>, walletId: string, newName: string): Promise<void> => {
+  const tx = db.transaction('accounts', 'readwrite');
+  const account = await tx.store.get(walletId);
+  if (account) {
+    account.name = newName;
+    await tx.store.put(account);
+  }
+  await tx.done;
+}
+
+export const changeAccountAvatar = async (db: IDBPDatabase<DatabaseSchema>, walletId: string, newAvatar: string): Promise<void> => {
+  const tx = db.transaction('accounts', 'readwrite');
+  const account = await tx.store.get(walletId);
+  if (account) {
+    account.avatar = newAvatar;
+    await tx.store.put(account);
+  }
+  await tx.done;
+}
+
+export const deleteAccount = async (db: IDBPDatabase<DatabaseSchema>, walletId: string): Promise<void> => {
+  const tx = db.transaction('accounts', 'readwrite');
+  await tx.store.delete(walletId);
+  await tx.done;
+}
 
 // Устанавливаем состояние
 export const setState = async (db: IDBPDatabase<DatabaseSchema>, key: string, value: any): Promise<void> => {
@@ -123,6 +149,7 @@ export const loadWallets = async (db: IDBPDatabase, password: string): Promise<W
       decryptedWallets.push({
         id: wallet.id,
         name: wallet.name,
+        avatar: wallet.avatar,
         seedPhrase,
       });
     } catch (e) {

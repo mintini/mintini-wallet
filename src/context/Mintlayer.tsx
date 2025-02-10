@@ -96,6 +96,19 @@ export const MintlayerProvider  = ({ children }) => {
     }
   }
 
+  const reloadWallet = async () => {
+    const walletId = wallets[selectedWallet].id;
+    const loadedWallets = await loadWallets(db, password);
+    setWallets(loadedWallets);
+
+    const index = loadedWallets.findIndex(wallet => wallet.id === walletId);
+    if(index !== -1) {
+      setSelectedWallet(index);
+    } else {
+      setSelectedWallet(0);
+    }
+  }
+
   const getPendingTransactions = async () => {
     const data = await getTransactionsByWallet(db, wallet.id);
     setPendingTransactions(data);
@@ -287,6 +300,7 @@ export const MintlayerProvider  = ({ children }) => {
 
     delegations,
     lastBlockTime,
+    reloadWallet,
   }
 
   return (
