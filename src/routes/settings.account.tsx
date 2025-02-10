@@ -18,7 +18,7 @@ export const SettingsAccount = () => {
   const navigate = useNavigate();
   const [ revealConfirm, setRevealConfirm ] = useState(false);
   const [ seedPhrase, setSeedPhrase ] = useState('');
-  const { wallet, reloadWallet, selectWallet, getWallets } = useMintlayer();
+  const { wallet, reloadWallet, selectWallet, getWallets, wallets } = useMintlayer();
 
   const [ formChangeName, setFormChangeName ] = useState(false);
   const [ newName, setNewName ] = useState(wallet.name);
@@ -68,7 +68,11 @@ export const SettingsAccount = () => {
     await deleteAccount(db, wallet.id);
     await getWallets();
     selectWallet(0);
-    navigate('/wallet');
+    if(wallets.length > 1) {
+      navigate('/wallet');
+    } else {
+      navigate('/start');
+    }
   }
 
   console.log('wallet', wallet);
