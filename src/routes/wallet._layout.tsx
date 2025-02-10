@@ -23,10 +23,10 @@ export const WalletLayout = () => {
       <div className="bg-mint h-16 flex flex-row items-center justify-between px-4 fixed top-0 left-0 w-full z-50">
         <div className="flex flex-row items-center gap-2">
           <div onClick={() => setSidebar(true)}
-               className="rounded-full bg-white w-10 h-10 flex items-center justify-center font-bold">
-            {wallet?.name[0]}
+               className="rounded-full bg-white w-10 h-10 flex items-center justify-center font-bold text-2xl">
+            {wallet?.avatar || wallet?.name[0]}
           </div>
-          <div className="text-xl font-light">
+          <div className="text-xl font-light max-w-52 text-nowrap overflow-hidden text-ellipsis">
             {wallet?.name}
           </div>
         </div>
@@ -59,11 +59,11 @@ export const WalletLayout = () => {
                 setSidebar(false);
                 navigate('/wallet');
               }} key={index} className="flex flex-col items-center justify-center h-20 w-20">
-                <div className="rounded-full bg-mint w-10 h-10 flex items-center justify-center font-bold">
-                  {_.name[0]}
+                <div className="rounded-full bg-mint w-10 h-10 flex items-center justify-center font-bold text-2xl">
+                  {_.avatar || _.name[0]}
                 </div>
-                <div className="text-xs text-center">
-                  {_.name}
+                <div className="text-xs text-center overflow-hidden text-ellipsis px-2 w-full">
+                  {_.name?.slice(0, 25)}
                 </div>
               </div>
             ))

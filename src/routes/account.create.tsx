@@ -23,7 +23,7 @@ export function AccountCreate () {
   const [seedRevealed, setSeedRevealed] = useState(false);
   const [error, setError] = useState('');
   const { encryptionKey: password } = useEncryptionKey();
-  const { getWallets, wallets } = useMintlayer();
+  const { getWallets, wallets, selectWallet } = useMintlayer();
 
   const { telegram } = useTelegram();
   const navigate = useNavigate();
@@ -68,6 +68,7 @@ export function AccountCreate () {
       }
       await saveWallet(db, wallet, password);
       await getWallets();
+      selectWallet(walletIndex - 1);
 
       navigate('/wallet');
     } catch (error) {

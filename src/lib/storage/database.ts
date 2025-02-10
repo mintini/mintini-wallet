@@ -4,6 +4,7 @@ import { encryptData, decryptData, generateKeyFromPassword } from '../crypto';
 interface Wallet {
   id: string;
   name: string;
+  avatar?: string;
   seedPhrase: string;
   cipherText?: string;
   iv?: string;
@@ -41,6 +42,22 @@ export const changeAccountName = async (db: IDBPDatabase<DatabaseSchema>, wallet
     account.name = newName;
     await tx.store.put(account);
   }
+  await tx.done;
+}
+
+export const changeAccountAvatar = async (db: IDBPDatabase<DatabaseSchema>, walletId: string, newAvatar: string): Promise<void> => {
+  const tx = db.transaction('accounts', 'readwrite');
+  const account = await tx.store.get(walletId);
+  if (account) {
+    account.avatar = newAvatar;
+    await tx.store.put(account);
+  }
+  await tx.done;
+}
+
+export const deleteAccount = async (db: IDBPDatabase<DatabaseSchema>, walletId: string): Promise<void> => {
+  const tx = db.transaction('accounts', 'readwrite');
+  await tx.store.delete(walletId);
   await tx.done;
 }
 
@@ -132,6 +149,7 @@ export const loadWallets = async (db: IDBPDatabase, password: string): Promise<W
       decryptedWallets.push({
         id: wallet.id,
         name: wallet.name,
+        avatar: wallet.avatar,
         seedPhrase,
       });
     } catch (e) {
