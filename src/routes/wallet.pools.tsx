@@ -32,6 +32,7 @@ export const WalletPools = () => {
       pool_label: delegation.pool_id.slice(0, 6) + '...' +  delegation.pool_id.slice(-6),
       balance: delegation.balance.decimal,
       delegation_id: delegation.delegation_id.slice(0, 6) + '...' +  delegation.delegation_id.slice(-6),
+      pool_data: poolsData.find((_: any) => _.pool_id === delegation.pool_id),
     }
   });
 
@@ -106,7 +107,13 @@ export const WalletPools = () => {
       </div>
 
       {account_pools.filter(lowBalance).map((pool, index) => (
-        <div key={index} onClick={handlePoolClick(pool.pool_id)} className="mx-4 bg-white rounded-xl p-4 mb-4">
+        <div key={index} onClick={handlePoolClick(pool.pool_id)} className={`mx-4 bg-white rounded-xl p-4 mb-4 relative`}>
+          {
+            !pool.pool_data && (
+              <div className="absolute top-0 left-0 text-amber-800 bg-amber-200 px-4 py-2 rounded-xl">Decommissioned</div>
+            )
+          }
+
           <div className="flex flex-row justify-between">
             <div>
               <div className="text-mint-dark font-bold">

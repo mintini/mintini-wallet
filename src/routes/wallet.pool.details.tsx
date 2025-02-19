@@ -33,11 +33,13 @@ export const WalletPoolDetails = () => {
   const { pools } = useOutletContext<any>();
 
   const { poolId } = useParams();
+
+  const poolLabel = poolId?.slice(0, 6) + '...' + poolId?.slice(-6);
+
   const { telegram } = useTelegram();
   const { delegations } = useMintlayer();
   const [action, setAction] = useState('stake');
   const poolData = pools.find((pool: any) => pool.pool_id === poolId);
-
 
   useEffect(() => {
     if (telegram) {
@@ -63,7 +65,7 @@ export const WalletPoolDetails = () => {
     return acc + parseFloat(pool.balance.toString());
   }, 0);
 
-  const no_profit = poolData.cost_per_block > 150 || poolData.margin_ratio > 0.9;
+  const no_profit = poolData ? (poolData.cost_per_block > 150 || poolData.margin_ratio > 0.9) : true;
 
   return (
     <>
@@ -72,24 +74,44 @@ export const WalletPoolDetails = () => {
           <div className="border-2 border-mint-light m-4 rounded p-4">
             <div className="flex flex-row gap-3 mb-2">
               <div>Pool ID:</div>
-              <div className="font-mono break-all pr-10">{poolData.pool_label}</div>
+              <div className="font-mono break-all pr-10">{poolLabel}</div>
             </div>
 
-            <div className={`${no_profit ? 'bg-red-100':'bg-mint-light'} rounded-2xl px-3 py-2 flex flex-row justify-between mb-2`}>
-              <div>
-                <div>Pool Balance:</div>
-                <div>{poolData.pledge}</div>
-              </div>
-              <div>
-                <div>
-                  <div>Pool Commission</div>
+            {
+              poolData ? (
+                <div className={`${no_profit ? 'bg-red-100':'bg-mint-light'} rounded-2xl px-3 py-2 flex flex-row justify-between mb-2`}>
                   <div>
-                    <span className={poolData.cost_per_block > 150 ? 'text-red-500' : poolData.cost_per_block > 100 ? 'text-amber-500' : 'text-mint-dark'}>{poolData.cost_per_block} ML</span>
-                    {' '}+{' '}
-                    <span className={poolData.margin_ratio > 0.9 ? 'text-red-500' : poolData.margin_ratio > 0.5 ? 'text-amber-500' : 'text-mint-dark'}>{poolData.margin_ratio_per_thousand}</span></div>
+                    <div>Pool Balance:</div>
+                    <div>{poolData.pledge}</div>
+                  </div>
+                  <div>
+                    <div>
+                      <div>Pool Commission</div>
+                      <div>
+                        <span className={poolData.cost_per_block > 150 ? 'text-red-500' : poolData.cost_per_block > 100 ? 'text-amber-500' : 'text-mint-dark'}>{poolData.cost_per_block} ML</span>
+                        {' '}+{' '}
+                        <span className={poolData.margin_ratio > 0.9 ? 'text-red-500' : poolData.margin_ratio > 0.5 ? 'text-amber-500' : 'text-mint-dark'}>{poolData.margin_ratio_per_thousand}</span></div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              ) : (
+                <div className={`${no_profit ? 'bg-red-100':'bg-mint-light'} rounded-2xl px-3 py-2 flex flex-row justify-between mb-2`}>
+                  <div>
+                    <div>Pool Balance:</div>
+                    <div>0</div>
+                  </div>
+                  <div>
+                    <div>
+                      <div>Pool Commission</div>
+                      <div>
+                        <span className={'text-red-500'}>0 ML</span>
+                        {' '}+{' '}
+                        <span className={'text-red-500'}>0</span></div>
+                    </div>
+                  </div>
+                </div>
+              )
+            }
 
             {
               no_profit && (
