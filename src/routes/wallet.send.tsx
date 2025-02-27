@@ -88,7 +88,6 @@ export const WalletSend = () => {
       amountCoin = amount;
     } else {
       amountToken = amount;
-      amountCoin = fee;
     }
 
     // start to prepare transaction by selecting UTXOs
@@ -106,7 +105,8 @@ export const WalletSend = () => {
       destination: recipient,
     }];
     // step 2. Determine inputs
-    const inputObjCoin = selectUTXOs(utxos, amountCoin, 'Transfer', null);
+    const pickCoin = amountCoin + fee;
+    const inputObjCoin = selectUTXOs(utxos, pickCoin, 'Transfer', null);
     const inputObjToken = sendToken?.token_id ? selectUTXOs(utxos, amountToken, 'Transfer', sendToken?.token_id) : [];
 
     const inputObj = [...inputObjCoin, ...inputObjToken];
@@ -350,8 +350,8 @@ export const WalletSend = () => {
           state === 'form' && (
             <div className="flex flex-col gap-4">
               <div className="relative">
-                <input onChange={handleUpdateRecipient} value={recipient} className="border border-mint-dark w-full rounded-xl px-4 py-4" placeholder="Recipient address" />
-                <div onClick={handlePaste} className="absolute top-4 right-4 bg-mint w-16 h-8 rounded-full flex items-center justify-center">
+                <input onChange={handleUpdateRecipient} value={recipient} className="border border-mint-dark w-full rounded-xl px-4 pr-24 py-4" placeholder="Recipient address" />
+                <div onClick={handlePaste} className="absolute top-1 border-white border-8 right-1 bg-mint w-20 h-12 rounded-full flex items-center justify-center">
                   paste
                 </div>
                 {/*<div>*/}
@@ -406,7 +406,7 @@ export const WalletSend = () => {
                   <div className="text-xl">
                     Recipient
                   </div>
-                  <div>
+                  <div className="font-mono break-all">
                     {recipient}
                   </div>
                 </div>
@@ -416,7 +416,7 @@ export const WalletSend = () => {
                     Amount
                   </div>
                   <div>
-                    {amountDecimal} ML
+                    {amountDecimal} {symbol}
                   </div>
                 </div>
 
@@ -445,7 +445,7 @@ export const WalletSend = () => {
                               transactionJSONrepresentation.inputs.map((input: any, index: number) => (
                                 <div key={index}>
                                   <div className="break-all">{input.outpoint.source_id}:{input.outpoint.index}</div>
-                                  <div>{input.utxo.value.amount.decimal} ML</div>
+                                  <div>{input.utxo.value.amount.decimal} {input.utxo.value.token_id ? symbol : 'ML'}</div>
                                 </div>
                               ))
                             }
@@ -460,7 +460,7 @@ export const WalletSend = () => {
                               transactionJSONrepresentation.outputs.map((output: any, index: number) => (
                                 <div key={index}>
                                   <div>{output.destination}</div>
-                                  <div>{output.value.amount.decimal} ML</div>
+                                  <div>{output.value.amount.decimal} {output.value.token_id ? symbol : 'ML'}</div>
                                 </div>
                               ))
                             }
