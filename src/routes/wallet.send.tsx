@@ -87,7 +87,8 @@ export const WalletSend = () => {
     if (sendToken.type === 'Coin') {
       amountCoin = amount;
     } else {
-      amountToken = amount
+      amountToken = amount;
+      amountCoin = fee;
     }
 
     // start to prepare transaction by selecting UTXOs
