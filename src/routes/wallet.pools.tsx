@@ -4,6 +4,17 @@ import {Link, useLocation, useNavigate} from "react-router-dom";
 import {useMintlayer} from "../context/Mintlayer.tsx";
 import {Outlet} from "react-router";
 
+interface Pool {
+  pool_id: string;
+  pool_label: string;
+  pledge: string;
+  cost_per_block: string;
+  delegations_count: number;
+  delegations_amount: number;
+  margin_ratio_per_thousand: string;
+  margin_ratio: string;
+}
+
 export const WalletPools = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -148,21 +159,41 @@ export const WalletPools = () => {
 
       {pools.filter(filterMyPools).filter(additionalFilters).map((pool, index) => (
         <div key={index} onClick={handlePoolClick(pool.pool_id)} className="mx-4 bg-white rounded-xl p-4 mb-4">
-          <div className="flex flex-row justify-between">
-            <div>
-              <div className="text-mint-dark font-bold">
-                Pool ID
-              </div>
+          <div className="flex flex-col gap-4 justify-between">
+            <div className="flex flex-row justify-between">
               <div>
-                {pool.pool_label}
+                <div className="text-mint-dark font-bold">
+                  Pool ID
+                </div>
+                <div>
+                  {pool.pool_label}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-mint-dark font-bold">
+                  Pledge
+                </div>
+                <div>
+                  {pool.pledge}
+                </div>
               </div>
             </div>
-            <div>
-              <div className="text-mint-dark font-bold">
-                Pledge
-              </div>
+            <div className="flex flex-row justify-between">
               <div>
-                {pool.pledge}
+                <div className="text-mint-dark font-bold">
+                  Commission
+                </div>
+                <div>
+                  {pool.cost_per_block} ML + {pool.margin_ratio_per_thousand}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-mint-dark font-bold">
+                  Reward
+                </div>
+                <div>
+                  {getStakingPoolRating(pool)}
+                </div>
               </div>
             </div>
           </div>
@@ -176,4 +207,40 @@ export const WalletPools = () => {
       <Outlet context={{pools}} key={location.pathname} />
     </>
   )
+}
+
+
+function getStakingPoolRating(pool: Pool) {
+  const costPerBlock = parseFloat(pool.cost_per_block);
+  const marginRatioPerThousand = parseFloat(pool.margin_ratio_per_thousand);
+
+  // Проверка входных данных
+  if (costPerBlock < 0 || costPerBlock > 150 ||
+    marginRatioPerThousand < 0 || marginRatioPerThousand > 100) {
+    return "Invalid input parameters";
+  }
+
+  // Рассчитываем общий скор
+  let score = 0;
+
+  // Влияние costPerBlock (меньше - лучше)
+  if (costPerBlock <= 30) score += 50;
+  else if (costPerBlock <= 60) score += 40;
+  else if (costPerBlock <= 90) score += 30;
+  else if (costPerBlock <= 120) score += 20;
+  else score += 10;
+
+  // Влияние marginRatioPerThousand (меньше - лучше)
+  if (marginRatioPerThousand <= 20) score += 50;
+  else if (marginRatioPerThousand <= 40) score += 40;
+  else if (marginRatioPerThousand <= 60) score += 30;
+  else if (marginRatioPerThousand <= 80) score += 20;
+  else score += 10;
+
+  // Определяем рейтинг на основе итогового скора
+  if (score >= 90) return "Excellent";
+  else if (score >= 70) return "Good";
+  else if (score >= 50) return "Fair";
+  else if (score >= 30) return "Poor";
+  else return "No reward";
 }

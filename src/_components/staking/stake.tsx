@@ -272,11 +272,12 @@ export const DelegationStake = ({ delegationId }) => {
 
   const submitDisabled = amountDecimal === 0 || amountDecimal + fee.toString()/1e11 > tokens[0].balance || state === 'broadcast';
 
-  useEffect(() => {
-    if(amountDecimal + fee.toString()/1e11 > tokens[0].balance){
-      handleSetAmount(1)();
-    }
-  }, [amountDecimal, fee, tokens]);
+  // TODO: handle 100% of the balance
+  // useEffect(() => {
+  //   if(amountDecimal + fee.toString()/1e11 > tokens[0].balance){
+  //     handleSetAmount(1)();
+  //   }
+  // }, [amountDecimal, fee, tokens]);
 
   return (
     <div>
