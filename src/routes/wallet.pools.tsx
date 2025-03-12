@@ -3,17 +3,7 @@ import {useEffect} from "react";
 import {Link, useLocation, useNavigate} from "react-router-dom";
 import {useMintlayer} from "../context/Mintlayer.tsx";
 import {Outlet} from "react-router";
-
-interface Pool {
-  pool_id: string;
-  pool_label: string;
-  pledge: string;
-  cost_per_block: string;
-  delegations_count: number;
-  delegations_amount: number;
-  margin_ratio_per_thousand: string;
-  margin_ratio: string;
-}
+import {getStakingPoolRating} from "../helpers/pools.ts";
 
 export const WalletPools = () => {
   const location = useLocation();
@@ -21,6 +11,8 @@ export const WalletPools = () => {
   const { delegations, network } = useMintlayer();
 
   const [poolsData, setPools] = useState([]);
+
+  const [tab, setTab] = useState(0);
 
   const [hideLowBalance, setHideLowBalance] = useState(false);
 
@@ -106,8 +98,13 @@ export const WalletPools = () => {
       </div>
 
       <div className="my-4">
-        <div className="text-center font-bold">
-          Your delegations
+        <div className="flex flex-row mx-4 justify-center border-mint border-2 rounded-xl overflow-hidden">
+          <div className={`text-center w-full font-bold border-mint border-r-2 py-2 ${tab === 0 ? 'bg-mint text-white' : ''}`} onClick={()=>setTab(0)}>
+            Your delegations
+          </div>
+          <div className={`text-center w-full font-bold py-2 ${tab === 1 ? 'bg-mint text-white' : ''}`} onClick={()=>setTab(1)}>
+            Join pool
+          </div>
         </div>
       </div>
 
@@ -117,130 +114,99 @@ export const WalletPools = () => {
         </button>
       </div>
 
-      {account_pools.filter(lowBalance).map((pool, index) => (
-        <div key={index} onClick={handlePoolClick(pool.pool_id)} className={`mx-4 bg-white rounded-xl p-4 mb-4 relative`}>
-          {
-            !pool.pool_data && (
-              <div className="absolute top-0 left-0 text-amber-800 bg-amber-200 px-4 py-2 rounded-xl">Decommissioned</div>
-            )
-          }
+      {
+        tab === 0 && (
+          <>
+            {account_pools.filter(lowBalance).map((pool, index) => (
+              <div key={index} onClick={handlePoolClick(pool.pool_id)} className={`mx-4 bg-white rounded-xl p-4 mb-4 relative`}>
+                {
+                  !pool.pool_data && (
+                    <div className="absolute top-0 left-0 text-amber-800 bg-amber-200 px-4 py-2 rounded-xl">Decommissioned</div>
+                  )
+                }
 
-          <div className="flex flex-row justify-between">
-            <div>
-              <div className="text-mint-dark font-bold">
-                Pool ID
+                <div className="flex flex-row justify-between">
+                  <div>
+                    <div className="text-mint-dark font-bold">
+                      Pool ID
+                    </div>
+                    <div>
+                      {pool.pool_label}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-mint-dark font-bold">
+                      Balance
+                    </div>
+                    <div>
+                      {pool.balance} ML
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                {pool.pool_label}
-              </div>
-            </div>
-            <div>
-              <div className="text-mint-dark font-bold">
-                Balance
-              </div>
-              <div>
-                {pool.balance} ML
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
+            ))}
 
-
-      <div className="flex flex-row mt-4 justify-center">
-        <div className="w-20 h-1 bg-mint-dark rounded"></div>
-      </div>
-
-      <div className="my-4">
-        <div className="text-center font-bold">
-          Join new pool
-        </div>
-      </div>
-
-      {pools.filter(filterMyPools).filter(additionalFilters).map((pool, index) => (
-        <div key={index} onClick={handlePoolClick(pool.pool_id)} className="mx-4 bg-white rounded-xl p-4 mb-4">
-          <div className="flex flex-col gap-4 justify-between">
-            <div className="flex flex-row justify-between">
-              <div>
-                <div className="text-mint-dark font-bold">
-                  Pool ID
-                </div>
-                <div>
-                  {pool.pool_label}
+            {account_pools.length === 0 && (
+              <div className="mx-4 bg-white rounded-xl p-4 mb-4">
+                <div className="text-center">
+                  You don't have any delegations. Join a pool to start staking.
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-mint-dark font-bold">
-                  Pledge
-                </div>
-                <div>
-                  {pool.pledge}
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-row justify-between">
-              <div>
-                <div className="text-mint-dark font-bold">
-                  Commission
-                </div>
-                <div>
-                  {pool.cost_per_block} ML + {pool.margin_ratio_per_thousand}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-mint-dark font-bold">
-                  Reward
-                </div>
-                <div>
-                  {getStakingPoolRating(pool)}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
+            )}
+          </>
+        )
+      }
 
-      <div className="flex flex-row mt-4 justify-center">
-        <div className="w-20 h-1 bg-mint-dark rounded"></div>
-      </div>
+      {
+        tab === 1 && (
+          <>
+            {pools.filter(filterMyPools).filter(additionalFilters).map((pool, index) => (
+              <div key={index} onClick={handlePoolClick(pool.pool_id)} className="mx-4 bg-white rounded-xl p-4 mb-4">
+                <div className="flex flex-col gap-4 justify-between">
+                  <div className="flex flex-row justify-between">
+                    <div>
+                      <div className="text-mint-dark font-bold">
+                        Pool ID
+                      </div>
+                      <div>
+                        {pool.pool_label}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-mint-dark font-bold">
+                        Pledge
+                      </div>
+                      <div>
+                        {pool.pledge}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-row justify-between">
+                    <div>
+                      <div className="text-mint-dark font-bold">
+                        Commission
+                      </div>
+                      <div>
+                        {pool.cost_per_block} ML + {pool.margin_ratio_per_thousand}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-mint-dark font-bold">
+                        Reward
+                      </div>
+                      <div>
+                        {getStakingPoolRating(pool)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
+        )
+      }
 
       <Outlet context={{pools}} key={location.pathname} />
     </>
   )
-}
-
-
-function getStakingPoolRating(pool: Pool) {
-  const costPerBlock = parseFloat(pool.cost_per_block);
-  const marginRatioPerThousand = parseFloat(pool.margin_ratio_per_thousand);
-
-  // Проверка входных данных
-  if (costPerBlock < 0 || costPerBlock > 150 ||
-    marginRatioPerThousand < 0 || marginRatioPerThousand > 100) {
-    return "Invalid input parameters";
-  }
-
-  // Рассчитываем общий скор
-  let score = 0;
-
-  // Влияние costPerBlock (меньше - лучше)
-  if (costPerBlock <= 30) score += 50;
-  else if (costPerBlock <= 60) score += 40;
-  else if (costPerBlock <= 90) score += 30;
-  else if (costPerBlock <= 120) score += 20;
-  else score += 10;
-
-  // Влияние marginRatioPerThousand (меньше - лучше)
-  if (marginRatioPerThousand <= 20) score += 50;
-  else if (marginRatioPerThousand <= 40) score += 40;
-  else if (marginRatioPerThousand <= 60) score += 30;
-  else if (marginRatioPerThousand <= 80) score += 20;
-  else score += 10;
-
-  // Определяем рейтинг на основе итогового скора
-  if (score >= 90) return "Excellent";
-  else if (score >= 70) return "Good";
-  else if (score >= 50) return "Fair";
-  else if (score >= 30) return "Poor";
-  else return "No reward";
 }

@@ -11,6 +11,7 @@ import {
 } from "../lib/storage/database.ts";
 import {useDatabase} from "../context/Database.tsx";
 import {useEncryptionKey} from "../context/EncryptionKey.tsx";
+import {txToActivity} from "../lib/mintlayer/helpers.ts";
 
 const WALLET_API = 'https://api.mintini.app';
 
@@ -244,12 +245,10 @@ export const MintlayerProvider  = ({ children }) => {
     loadWasm();
   }, []);
 
-  const pendingUtxos = [];
-
-  pendingTransactions.forEach(tx => {
-    tx.outputs.forEach((output, index) => {
-      if(addresses.includes(output.destination)) {
-        pendingUtxos.push({
+  const pendingUtxos = pendingTransactions.reduce((acc, tx) => {
+    const matchingUtxos = tx.outputs.reduce((utxos, output, index) => {
+      if (addresses.includes(output.destination)) {
+        utxos.push({
           outpoint: {
             source_id: tx.id,
             index: index,
@@ -257,8 +256,10 @@ export const MintlayerProvider  = ({ children }) => {
           utxo: output,
         });
       }
-    });
-  })
+      return utxos;
+    }, []);
+    return acc.concat(matchingUtxos);
+  }, []);
 
   const usedUtxos = pendingTransactions.map(tx => tx.inputs).flat();
 
