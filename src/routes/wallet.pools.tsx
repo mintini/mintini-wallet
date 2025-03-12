@@ -12,6 +12,8 @@ export const WalletPools = () => {
 
   const [poolsData, setPools] = useState([]);
 
+  const [filterOpen, setFilterOpen] = useState(false);
+
   const [tab, setTab] = useState(0);
 
   const [hideLowBalance, setHideLowBalance] = useState(false);
@@ -98,12 +100,18 @@ export const WalletPools = () => {
       </div>
 
       <div className="my-4">
-        <div className="flex flex-row mx-4 justify-center border-mint border-2 rounded-xl overflow-hidden">
-          <div className={`text-center w-full font-bold border-mint border-r-2 py-2 ${tab === 0 ? 'bg-mint text-white' : ''}`} onClick={()=>setTab(0)}>
-            Your delegations
+        <div className="flex flex-row">
+          <div className="w-full flex flex-row mx-4 justify-center border-mint border-2 rounded-xl overflow-hidden">
+            <div className={`flex text-center items-center justify-center w-full font-bold border-mint border-r-2 ${tab === 0 ? 'bg-mint text-white' : ''}`} onClick={()=>setTab(0)}>
+              Your delegations
+            </div>
+            <div className={`flex text-center items-center justify-center w-full font-bold ${tab === 1 ? 'bg-mint text-white' : ''}`} onClick={()=>setTab(1)}>
+              Join pool
+            </div>
           </div>
-          <div className={`text-center w-full font-bold py-2 ${tab === 1 ? 'bg-mint text-white' : ''}`} onClick={()=>setTab(1)}>
-            Join pool
+          <div className="flex items-center justify-center w-8 mr-6 ml-0 flex-col" onClick={()=>setFilterOpen(!filterOpen)}>
+            <img src={`/icons/filter-lite.svg`} className="w-8 h-8" onClick={handleToggleLowBalance} />
+            <div className={`text-m`}>Filter</div>
           </div>
         </div>
       </div>
@@ -187,7 +195,11 @@ export const WalletPools = () => {
                         Commission
                       </div>
                       <div>
-                        {pool.cost_per_block} ML + {pool.margin_ratio_per_thousand}
+                        <div>
+                          <span className={pool.cost_per_block > 150 ? 'text-red-500' : pool.cost_per_block > 100 ? 'text-amber-500' : 'text-mint-dark'}>{pool.cost_per_block} ML</span>
+                          {' '}+{' '}
+                          <span className={pool.margin_ratio > 0.9 ? 'text-red-500' : pool.margin_ratio > 0.5 ? 'text-amber-500' : 'text-mint-dark'}>{pool.margin_ratio_per_thousand}</span>
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">

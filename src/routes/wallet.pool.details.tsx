@@ -90,7 +90,8 @@ export const WalletPoolDetails = () => {
                       <div>
                         <span className={poolData.cost_per_block > 150 ? 'text-red-500' : poolData.cost_per_block > 100 ? 'text-amber-500' : 'text-mint-dark'}>{poolData.cost_per_block} ML</span>
                         {' '}+{' '}
-                        <span className={poolData.margin_ratio > 0.9 ? 'text-red-500' : poolData.margin_ratio > 0.5 ? 'text-amber-500' : 'text-mint-dark'}>{poolData.margin_ratio_per_thousand}</span></div>
+                        <span className={poolData.margin_ratio > 0.9 ? 'text-red-500' : poolData.margin_ratio > 0.5 ? 'text-amber-500' : 'text-mint-dark'}>{poolData.margin_ratio_per_thousand}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
