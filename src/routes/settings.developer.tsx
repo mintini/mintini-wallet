@@ -8,7 +8,7 @@ import {useMintlayer} from "../context/Mintlayer.tsx";
 export const SettingsDeveloper = () => {
   const { telegram } = useTelegram();
   const { db } = useDatabase();
-  const { changeNetwork, chainHeight, lastBlockTime, secondsFromLastBlock, utxos } = useMintlayer();
+  const { changeNetwork, chainHeight, lastBlockTime, secondsFromLastBlock } = useMintlayer();
   const navigate = useNavigate();
 
   const [testnetMode, setTestnetMode] = useState(false);
@@ -78,15 +78,6 @@ export const SettingsDeveloper = () => {
               {lastBlockTime?.toLocaleString()} /
               {secondsFromLastBlock}
             </span>
-          </div>
-        </div>
-
-        <div>
-          <div className="px-2 py-2 rounded-2xl border border-mint-dark flex flex-row justify-between items-center">
-            View UTXO for this wallet
-          </div>
-          <div>
-            {JSON.stringify(utxos, null, 2)}
           </div>
         </div>
       </div>
