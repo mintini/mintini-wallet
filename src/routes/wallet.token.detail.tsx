@@ -3,6 +3,7 @@ import {Link} from "react-router-dom";
 import {useTelegram} from "../context/Telegram.tsx";
 import {useMintlayer} from "../context/Mintlayer.tsx";
 import QRCode from "react-qr-code";
+import {useParams} from "react-router";
 
 const COINS: any = {
   'ML': {
@@ -10,7 +11,10 @@ const COINS: any = {
   }
 };
 
-export const WalletMain = () => {
+export const WalletCurrency = () => {
+  const { currency } = useParams();
+  console.log('currency', currency);
+
   const { telegram } = useTelegram();
   const {
     addresses,
@@ -59,7 +63,6 @@ export const WalletMain = () => {
       value: item.value,
       value_change_percent: item.value_change_percent,
       value_change: item.value * item.value_change_percent / 100,
-      token_id: item.token_id,
     }
   });
 
@@ -162,7 +165,7 @@ export const WalletMain = () => {
         <div className="flex flex-col py-4 mx-4 gap-1">
           {
             tokens.map((_: any, index: any) => (
-              <Link to={`/wallet/currency/${_.token_id || 'ml'}`} key={index} className="flex flex-row justify-between items-center border border-mint-dark px-2 py-1 rounded-xl">
+              <div key={index} className="flex flex-row justify-between items-center border border-mint-dark px-2 py-1 rounded-xl">
                 <div className="flex flex-row gap-2 items-center">
                   {
                     COINS[_.ticker] ? (
@@ -198,7 +201,7 @@ export const WalletMain = () => {
                     </div>
                   ) : <></>}
                 </div>
-              </Link>
+              </div>
             ))
           }
         </div>

@@ -11,6 +11,7 @@ import {AccountImport} from "./routes/account.import.tsx";
 import {Start} from "./routes/start.tsx";
 import {Onboarding} from "./routes/onboarding.tsx";
 import {WalletMain} from "./routes/wallet.main.tsx";
+import {WalletCurrency} from "./routes/wallet.token.detail.tsx";
 import {WalletPools} from "./routes/wallet.pools.tsx";
 import {WalletPoolDetails} from "./routes/wallet.pool.details.tsx";
 import {WalletSend} from "./routes/wallet.send.tsx";
@@ -132,6 +133,10 @@ const router = createBrowserRouter([
           {
             path: 'activity',
             element: <WalletActivity />,
+          },
+          {
+            path: 'currency/:currency',
+            element: <WalletCurrency />,
           }
         ],
       },
