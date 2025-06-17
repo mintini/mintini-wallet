@@ -1,9 +1,19 @@
-import {NavLink, Link} from "react-router-dom";
+import {NavLink as DomNavLink, Link as DomLink} from "react-router-dom";
 import {useTelegram} from "../context/Telegram.tsx";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Outlet} from "react-router";
 import {useMintlayer} from "../context/Mintlayer.tsx";
 import {useNavigate} from "react-router-dom";
+
+const Link = React.memo(DomLink, (prevProps, nextProps) => {
+  // Prevent re-rendering if the to prop is the same
+  return prevProps.to === nextProps.to;
+})
+
+const NavLink = React.memo(DomNavLink, (prevProps, nextProps) => {
+  // Prevent re-rendering if the to prop is the same
+  return prevProps.to === nextProps.to;
+})
 
 export const WalletLayout = () => {
   const { telegram } = useTelegram();

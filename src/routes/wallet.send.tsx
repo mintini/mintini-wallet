@@ -1,8 +1,8 @@
 // @ts-nocheck
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useTelegram} from "../context/Telegram.tsx";
 import {useMintlayer} from "../context/Mintlayer.tsx";
-import {Link, useNavigate} from "react-router-dom";
+import {Link as DomLink, useNavigate} from "react-router-dom";
 import {getOutputs, mergeUint8Arrays, selectUTXOs, valid_recipient} from "../lib/mintlayer/helpers.ts";
 import {
   Amount,
@@ -18,6 +18,11 @@ import {
 import {TokenSelector} from "../_components/TokenSelector.tsx";
 import {saveTransactions} from "../lib/storage/database.ts";
 import {useDatabase} from "../context/Database.tsx";
+
+const Link = React.memo(DomLink, (prevProps, nextProps) => {
+  // Prevent re-rendering if the to prop is the same
+  return prevProps.to === nextProps.to;
+})
 
 export const WalletSend = () => {
   const { telegram } = useTelegram();
