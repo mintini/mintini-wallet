@@ -8,7 +8,7 @@ import {useMintlayer} from "../context/Mintlayer.tsx";
 export const SettingsDeveloper = () => {
   const { telegram } = useTelegram();
   const { db } = useDatabase();
-  const { changeNetwork, chainHeight, lastBlockTime, secondsFromLastBlock, utxos } = useMintlayer();
+  const { changeNetwork, chainHeight, lastBlockTime, secondsFromLastBlock } = useMintlayer();
   const navigate = useNavigate();
 
   const [testnetMode, setTestnetMode] = useState(false);
