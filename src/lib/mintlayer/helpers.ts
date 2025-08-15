@@ -256,35 +256,66 @@ function analysisTransaction({tx, addresses}) {
     const myOutputs = outputs.filter(output => addresses.includes(output.destination));
     if(myInputs.length > 0 && myOutputs.length > 0) {
       activity.type = 'swap';
-      let token = '';
-      // let's calculate the amount. in this case need to compare the inputs.input.utxo.value.token and outputs.utxo.value.token. equal means that is source token. different means that is destination token
 
       // get order id
       const order_id = myFillOrders[0].input.order_id;
       activity.interact = { order_id };
 
-      // lets calculate outflow amount from my addresses
-      const outputAmount = myOutputs.reduce((acc, output) => {
-        if(
-          output.value.type === 'TokenV1'
-        ) {
-          acc += Number(output.value.amount.decimal);
-          token = output.value.token_id;
+      // Group inputs and outputs by token type to calculate net differences
+      const tokenBalances = new Map();
+
+      // Process inputs (what we're sending out)
+      myInputs.forEach(input => {
+        const tokenId = input.utxo.value.token_id || 'Coin';
+        const amount = Number(input.utxo.value.amount.decimal);
+
+        if (!tokenBalances.has(tokenId)) {
+          tokenBalances.set(tokenId, { sent: 0, received: 0 });
         }
-        return acc;
-      }, 0);
-      activity.amount.inflow.total = outputAmount;
-      activity.amount.inflow.token = { token_id: token };
+        tokenBalances.get(tokenId).sent += amount;
+      });
 
-      // lets calculate inflow amount from my addresses
-      const inputAmount = myInputs.reduce((acc, input) => {
-        acc += Number(input.utxo.value.amount.decimal);
-        token = input.utxo.value.token_id || 'Coin';
-        return acc;
-      }, 0);
-      activity.amount.outflow.total = inputAmount;
-      activity.amount.outflow.token = { token_id: token };
+      // Process outputs (what we're receiving)
+      myOutputs.forEach(output => {
+        const tokenId = output.value.type === 'TokenV1' ? output.value.token_id : 'Coin';
+        const amount = Number(output.value.amount.decimal);
 
+        if (!tokenBalances.has(tokenId)) {
+          tokenBalances.set(tokenId, { sent: 0, received: 0 });
+        }
+        tokenBalances.get(tokenId).received += amount;
+      });
+
+      // Find the tokens with net outflow (what we're giving up) and net inflow (what we're getting)
+      let outflowToken = null;
+      let inflowToken = null;
+      let maxOutflow = 0;
+      let maxInflow = 0;
+
+      tokenBalances.forEach((balance, tokenId) => {
+        const netFlow = balance.received - balance.sent;
+
+        if (netFlow < 0 && Math.abs(netFlow) > maxOutflow) {
+          // Net outflow (we're sending more than receiving)
+          maxOutflow = Math.abs(netFlow);
+          outflowToken = { token_id: tokenId, amount: Math.abs(netFlow) };
+        } else if (netFlow > 0 && netFlow > maxInflow) {
+          // Net inflow (we're receiving more than sending)
+          maxInflow = netFlow;
+          inflowToken = { token_id: tokenId, amount: netFlow };
+        }
+      });
+
+      // Set the activity amounts based on the net differences
+      if (outflowToken) {
+        activity.amount.outflow.total = outflowToken.amount;
+        activity.amount.outflow.token = { token_id: outflowToken.token_id };
+      }
+
+      if (inflowToken) {
+        activity.amount.inflow.total = inflowToken.amount;
+        activity.amount.inflow.token = { token_id: inflowToken.token_id };
+      }
     }
     return activity;
   }
