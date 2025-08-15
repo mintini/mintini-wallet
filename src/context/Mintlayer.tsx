@@ -50,7 +50,6 @@ export const MintlayerProvider  = ({ children }) => {
   const wallet = wallets[selectedWallet];
 
   const [pendingTransactions, setPendingTransactions] = useState([]);
-  const [activity, setActivity] = useState([]);
 
   const [socket, setSocket] = useState(null);
 
@@ -140,20 +139,6 @@ export const MintlayerProvider  = ({ children }) => {
     setDelegations(data.delegations);
   }
 
-  const getActivity = async () => {
-    if(!addresses.length) return;
-    setTokensLoading(true);
-    const response = await fetch(WALLET_API + '/activity', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ addresses, network })
-    });
-    const data = await response.json();
-    setActivity(data);
-  }
-
   const getAddresses = () => {
     const seed = wallets[selectedWallet].seedPhrase;
     const walletAddresses = [];
@@ -195,16 +180,6 @@ export const MintlayerProvider  = ({ children }) => {
   }
 
   useEffect(() => {
-    if(!activity) return;
-    // find tx from activity and remove from database
-    setPendingTransactions(pendingTransactions.filter(tx => !activity.find(a => a.txid === tx.id)));
-    // clean from database
-    activity.forEach(async (tx) => {
-      await removeOneTransaction(db, tx.txid);
-    });
-  }, [activity]);
-
-  useEffect(() => {
     if(!ml) return;
     if(!password) return;
     getWallets();
@@ -213,7 +188,6 @@ export const MintlayerProvider  = ({ children }) => {
   useEffect(() => {
     if(!wallet) return;
     getAddresses();
-    getActivity();
     getPendingTransactions();
   }, [
     selectedWallet,
@@ -223,7 +197,6 @@ export const MintlayerProvider  = ({ children }) => {
 
   const refreshAccount = () => {
     getAddresses();
-    getActivity();
     getPendingTransactions();
   }
 

@@ -73,21 +73,41 @@ export const WalletActivity = () => {
   useEffect(() => {
     // fetch activity from endpoint
     const fetchActivity = async () => {
-      const response = await fetch('https://api.mintini.app/activity', {
+      const addresses_data = await fetch('https://api.mintini.app/batch_data', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          addresses: addresses,
-          network,
-        }),
+          type: '/address/:address',
+          ids: addresses,
+          network
+        })
       });
-      const data = await response.json();
-      setActivity(data);
+      const data = await addresses_data.json();
+      const txs = data.results.map((item: any) => item.transaction_history).flat();
+      const txs_data = await fetch('https://api.mintini.app/batch_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: '/transaction/:txid',
+          ids: txs,
+          network
+        })
+      });
+      const txs_data_json = await txs_data.json();
+      const txs_data_json_results = txs_data_json.results;
+      console.log('txs_data_json_results', txs_data_json_results);
+      const parsedData = txToActivity(txs_data_json_results, addresses);
+      console.log('parsedData', parsedData);
+      setActivity(parsedData);
     }
-    fetchActivity();
-  }, []);
+    if(addresses) {
+      fetchActivity();
+    }
+  }, [addresses]);
 
   if(!addresses[0]) {
     return <div>Loading...</div>

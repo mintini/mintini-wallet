@@ -176,6 +176,9 @@ export const txToActivity = (txs: any[], addresses: any[]) => {
   const activities = [];
 
   txs.forEach(tx => {
+    if(tx.error) {
+      return;
+    }
     const activity = analysisTransaction({tx, addresses});
     activities.push(activity);
   });
@@ -184,6 +187,10 @@ export const txToActivity = (txs: any[], addresses: any[]) => {
 }
 
 function analysisTransaction({tx, addresses}) {
+  if(tx.error){
+    return null;
+  }
+
   const {
     inputs,
     outputs,
@@ -213,8 +220,8 @@ function analysisTransaction({tx, addresses}) {
   activity.timestamp = tx.timestamp;
 
   // filter out unsupported transactions
-  const unsupportedInput = inputs.filter(input => input?.utxo?.type === 'IssueNft' || input?.utxo?.type === 'IssueFungibleToken');
-  const unsupportedOutput = outputs.filter(output => output.type === 'IssueNft' || output.type === 'IssueFungibleToken');
+  const unsupportedInput = inputs.filter(input => input?.utxo?.type === 'IssueNft' || input?.utxo?.type === 'IssueFungibleToken' || input?.utxo?.type === 'Htlc');
+  const unsupportedOutput = outputs.filter(output => output.type === 'IssueNft' || output.type === 'IssueFungibleToken' || output.type === 'Htlc');
   if(unsupportedInput.length > 0 || unsupportedOutput.length > 0) {
     activity.type = 'unsupported';
     return activity;
@@ -317,29 +324,31 @@ function analysisTransaction({tx, addresses}) {
   }
 
   if(myInputs.length > 0 && myOutputs.length >= 0) {
-    activity.type = 'send';
-    let token = '';
+    if(otherOutputs.length > 0) {
+      activity.type = 'send';
+      let token = '';
 
-    // let's calculate the amount
-    const inputAmount = myInputs.reduce((acc, input) => {
-      acc += Number(input.utxo.value.amount.decimal);
-      token = input.utxo.value.type === 'TokenV1' ? input.utxo.value.token_id : 'Coin';
-      return acc;
-    }, 0);
+      // let's calculate the amount
+      const inputAmount = myInputs.reduce((acc, input) => {
+        acc += Number(input.utxo.value.amount.decimal);
+        token = input.utxo.value.type === 'TokenV1' ? input.utxo.value.token_id : 'Coin';
+        return acc;
+      }, 0);
 
-    // let's calculate the amount send to other
-    const outputAmount = otherOutputs.reduce((acc, output) => {
-      acc += Number(output.value.amount.decimal);
-      token = output.value.type === 'TokenV1' ? output.value.token_id : 'Coin';
-      return acc;
-    }, 0);
+      // let's calculate the amount send to other
+      const outputAmount = otherOutputs.reduce((acc, output) => {
+        acc += Number(output.value.amount.decimal);
+        token = output.value.type === 'TokenV1' ? output.value.token_id : 'Coin';
+        return acc;
+      }, 0);
 
-    const outputAddresses = otherOutputs.map(output => output.destination);
+      const outputAddresses = otherOutputs.map(output => output.destination || '!!!!');
 
-    activity.amount.outflow.total = outputAmount;
-    activity.amount.outflow.token = { token_id: token };
-    activity.interact = { addresses: outputAddresses };
-    return activity;
+      activity.amount.outflow.total = outputAmount;
+      activity.amount.outflow.token = {token_id: token};
+      activity.interact = {addresses: outputAddresses};
+      return activity;
+    }
   }
 
   if(myInputs.length === 0 && myOutputs.length > 0) {
