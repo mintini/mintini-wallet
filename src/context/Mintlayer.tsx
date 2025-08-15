@@ -135,6 +135,12 @@ export const MintlayerProvider  = ({ children }) => {
     const data = await response.json();
     setTokens(data.tokens);
     setTokensLoading(false);
+
+    // filter out HTLC
+    data.utxos = data.utxos.filter((utxo) => {
+      return utxo.utxo.type !== 'Htlc';
+    });
+
     setUtxos(data.utxos);
     setDelegations(data.delegations);
   }
