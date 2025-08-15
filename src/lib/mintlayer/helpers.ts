@@ -9,6 +9,7 @@ import {
   encode_output_token_transfer,
   encode_output_transfer, staking_pool_spend_maturity_block_count
 } from "./wasm_wrappers";
+import Decimal from 'decimal.js';
 
 interface UTXO {
   outpoint: any;
@@ -191,6 +192,13 @@ function analysisTransaction({tx, addresses}) {
     return null;
   }
 
+  // Helper function to handle decimal amounts with precision using decimal.js
+  const getDecimalAmount = (decimalValue) => {
+    if (!decimalValue || decimalValue === 0) return new Decimal(0);
+    // Convert to string first to avoid floating point precision issues
+    return new Decimal(decimalValue.toString());
+  };
+
   const {
     inputs,
     outputs,
@@ -267,42 +275,42 @@ function analysisTransaction({tx, addresses}) {
       // Process inputs (what we're sending out)
       myInputs.forEach(input => {
         const tokenId = input.utxo.value.token_id || 'Coin';
-        const amount = Number(input.utxo.value.amount.decimal);
+        const amount = getDecimalAmount(input.utxo.value.amount.decimal);
 
         if (!tokenBalances.has(tokenId)) {
-          tokenBalances.set(tokenId, { sent: 0, received: 0 });
+          tokenBalances.set(tokenId, { sent: new Decimal(0), received: new Decimal(0) });
         }
-        tokenBalances.get(tokenId).sent += amount;
+        tokenBalances.get(tokenId).sent = tokenBalances.get(tokenId).sent.plus(amount);
       });
 
       // Process outputs (what we're receiving)
       myOutputs.forEach(output => {
         const tokenId = output.value.type === 'TokenV1' ? output.value.token_id : 'Coin';
-        const amount = Number(output.value.amount.decimal);
+        const amount = getDecimalAmount(output.value.amount.decimal);
 
         if (!tokenBalances.has(tokenId)) {
-          tokenBalances.set(tokenId, { sent: 0, received: 0 });
+          tokenBalances.set(tokenId, { sent: new Decimal(0), received: new Decimal(0) });
         }
-        tokenBalances.get(tokenId).received += amount;
+        tokenBalances.get(tokenId).received = tokenBalances.get(tokenId).received.plus(amount);
       });
 
       // Find the tokens with net outflow (what we're giving up) and net inflow (what we're getting)
       let outflowToken = null;
       let inflowToken = null;
-      let maxOutflow = 0;
-      let maxInflow = 0;
+      let maxOutflow = new Decimal(0);
+      let maxInflow = new Decimal(0);
 
       tokenBalances.forEach((balance, tokenId) => {
-        const netFlow = balance.received - balance.sent;
+        const netFlow = balance.received.minus(balance.sent);
 
-        if (netFlow < 0 && Math.abs(netFlow) > maxOutflow) {
+        if (netFlow.isNegative() && netFlow.abs().greaterThan(maxOutflow)) {
           // Net outflow (we're sending more than receiving)
-          maxOutflow = Math.abs(netFlow);
-          outflowToken = { token_id: tokenId, amount: Math.abs(netFlow) };
-        } else if (netFlow > 0 && netFlow > maxInflow) {
+          maxOutflow = netFlow.abs();
+          outflowToken = { token_id: tokenId, amount: netFlow.abs().toNumber() };
+        } else if (netFlow.isPositive() && netFlow.greaterThan(maxInflow)) {
           // Net inflow (we're receiving more than sending)
           maxInflow = netFlow;
-          inflowToken = { token_id: tokenId, amount: netFlow };
+          inflowToken = { token_id: tokenId, amount: netFlow.toNumber() };
         }
       });
 
@@ -334,20 +342,18 @@ function analysisTransaction({tx, addresses}) {
 
       // let's calculate the amount
       const inputAmount = myInputs.reduce((acc, input) => {
-        acc += Number(input.utxo.value.amount.decimal);
         token = input.utxo.value.type === 'TokenV1' ? input.utxo.value.token_id : 'Coin';
-        return acc;
-      }, 0);
-      activity.amount.outflow.total = inputAmount;
+        return acc.plus(getDecimalAmount(input.utxo.value.amount.decimal));
+      }, new Decimal(0));
+      activity.amount.outflow.total = inputAmount.toNumber();
       activity.amount.outflow.token = { token_id: token };
 
 
       const outputAmount = myOutputs.reduce((acc, output) => {
-        acc += Number(output.value.amount.decimal);
         token = output.value.type === 'TokenV1' ? output.value.token_id : 'Coin';
-        return acc;
-      }, 0);
-      activity.amount.inflow.total = outputAmount;
+        return acc.plus(getDecimalAmount(output.value.amount.decimal));
+      }, new Decimal(0));
+      activity.amount.inflow.total = outputAmount.toNumber();
       activity.amount.inflow.token = { token_id: token };
 
       return activity;
@@ -361,21 +367,19 @@ function analysisTransaction({tx, addresses}) {
 
       // let's calculate the amount
       const inputAmount = myInputs.reduce((acc, input) => {
-        acc += Number(input.utxo.value.amount.decimal);
         token = input.utxo.value.type === 'TokenV1' ? input.utxo.value.token_id : 'Coin';
-        return acc;
-      }, 0);
+        return acc.plus(getDecimalAmount(input.utxo.value.amount.decimal));
+      }, new Decimal(0));
 
       // let's calculate the amount send to other
       const outputAmount = otherOutputs.reduce((acc, output) => {
-        acc += Number(output.value.amount.decimal);
         token = output.value.type === 'TokenV1' ? output.value.token_id : 'Coin';
-        return acc;
-      }, 0);
+        return acc.plus(getDecimalAmount(output.value.amount.decimal));
+      }, new Decimal(0));
 
       const outputAddresses = otherOutputs.map(output => output.destination || '!!!!');
 
-      activity.amount.outflow.total = outputAmount;
+      activity.amount.outflow.total = outputAmount.toNumber();
       activity.amount.outflow.token = {token_id: token};
       activity.interact = {addresses: outputAddresses};
       return activity;
@@ -388,14 +392,13 @@ function analysisTransaction({tx, addresses}) {
 
     // let's calculate the amount
     const outputAmount = myOutputs.reduce((acc, output) => {
-      acc += Number(output.value.amount.decimal);
       token = output.value.type === 'TokenV1' ? output.value.token_id : 'Coin';
-      return acc;
-    }, 0);
+      return acc.plus(getDecimalAmount(output.value.amount.decimal));
+    }, new Decimal(0));
 
     const inputAddresses = inputs.map(input => input.utxo.destination);
 
-    activity.amount.inflow.total = outputAmount;
+    activity.amount.inflow.total = outputAmount.toNumber();
     activity.amount.inflow.token = { token_id: token };
     activity.interact = { addresses: inputAddresses };
     return activity;
