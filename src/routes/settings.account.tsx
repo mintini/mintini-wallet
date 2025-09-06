@@ -75,8 +75,6 @@ export const SettingsAccount = () => {
     }
   }
 
-  console.log('wallet', wallet);
-
   return (
     <div className="bg-mint-light w-full h-full">
       <div className="bg-mint h-16 flex flex-row items-center justify-between px-4">

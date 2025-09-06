@@ -99,9 +99,7 @@ export const WalletActivity = () => {
       });
       const txs_data_json = await txs_data.json();
       const txs_data_json_results = txs_data_json.results;
-      console.log('txs_data_json_results', txs_data_json_results);
       const parsedData = txToActivity(txs_data_json_results, addresses);
-      console.log('parsedData', parsedData);
       setActivity(parsedData);
     }
     if(addresses) {

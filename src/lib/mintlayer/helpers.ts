@@ -23,12 +23,14 @@ export const selectUTXOs = (utxos: UTXO[], amount: bigint, outputType: string, t
 }
 
 const selectUTXOsForTransfer = (utxos: UTXO[], amount: bigint, token_id: string): UTXO[] => {
-  utxos = utxos.filter((utxo) => {
-    if(token_id === null){
-      return true;
-    }
-    return utxo.utxo.value.token_id === token_id;
-  });
+  utxos = utxos
+    .filter((utxo) => utxo.utxo.type !== 'Htlc')
+    .filter((utxo) => {
+      if(token_id === null){
+        return true;
+      }
+      return utxo.utxo.value.token_id === token_id;
+    });
 
   let balance = BigInt(0)
   const utxosToSpend = []
