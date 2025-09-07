@@ -204,6 +204,77 @@ export const removeOneTransaction = async (
   await tx.done;
 }
 
+export const cleanupOldPendingTransactions = async (
+  db: IDBPDatabase<any>,
+  walletId: string,
+  maxAgeHours: number = 24
+): Promise<number> => {
+  const tx = db.transaction('transactions', 'readwrite');
+  const allTransactions = await tx.store.getAll();
+  const cutoffTime = Math.floor(Date.now() / 1000) - (maxAgeHours * 60 * 60);
+
+  let removedCount = 0;
+  for (const txData of allTransactions) {
+    if (
+      txData.walletId === walletId &&
+      txData.confirmations === '0' &&
+      txData.timestamp < cutoffTime
+    ) {
+      await tx.store.delete(txData.id);
+      removedCount++;
+    }
+  }
+  await tx.done;
+  return removedCount;
+}
+
+export const updateTransactionConfirmations = async (
+  db: IDBPDatabase<any>,
+  txId: string,
+  confirmations: string
+): Promise<void> => {
+  const tx = db.transaction('transactions', 'readwrite');
+  const existingTx = await tx.store.get(txId);
+  if (existingTx) {
+    existingTx.confirmations = confirmations;
+    await tx.store.put(existingTx);
+  }
+  await tx.done;
+}
+
+export const removeConfirmedTransactions = async (
+  db: IDBPDatabase<any>,
+  walletId: string,
+  minConfirmations: number = 1
+): Promise<number> => {
+  const tx = db.transaction('transactions', 'readwrite');
+  const allTransactions = await tx.store.getAll();
+
+  let removedCount = 0;
+  for (const txData of allTransactions) {
+    if (
+      txData.walletId === walletId &&
+      parseInt(txData.confirmations) >= minConfirmations
+    ) {
+      await tx.store.delete(txData.id);
+      removedCount++;
+    }
+  }
+  await tx.done;
+  return removedCount;
+}
+
+export const getPendingTransactionsCount = async (
+  db: IDBPDatabase<any>,
+  walletId: string
+): Promise<number> => {
+  const tx = db.transaction('transactions', 'readonly');
+  const allTransactions = await tx.store.getAll();
+  return allTransactions.filter(tx =>
+    tx.walletId === walletId && tx.confirmations === '0'
+  ).length;
+}
+
 export const deleteDatabase = async (): Promise<void> => {
   await deleteDB('mintiniWalletDB', {
     blocked() {
