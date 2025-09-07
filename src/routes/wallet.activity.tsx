@@ -29,10 +29,17 @@ export const WalletActivity = () => {
   const { telegram } = useTelegram();
   const { db } = useDatabase();
   const { addresses, tokens: token_list, tokensLoading, network } = useMintlayer();
-  const { wallet, isTestnet } = useMintlayer();
+  const {
+    wallet,
+    isTestnet,
+    updatePendingTransactionStatuses,
+    cleanupConfirmedTransactions,
+    cleanupOldTransactions
+  } = useMintlayer();
   const [ confirmedActivity, setActivity ] = useState<any>([]);
   const [ pendingTransactions, setPendingTransactions ] = useState<any>([]);
   const [ selectedTx, setSelectedTx ] = useState<any>(null);
+  const [ isUpdatingTransactions, setIsUpdatingTransactions ] = useState(false);
 
   const [ tokensList, setTokensList ] = useState<any>([]);
 
@@ -62,6 +69,69 @@ export const WalletActivity = () => {
     }
     getPendingTransactions();
   }, [])
+
+  // Update transaction statuses when page loads
+  useEffect(() => {
+    const updateTransactionsOnPageLoad = async () => {
+      if (!wallet?.id || !db || isUpdatingTransactions) return;
+
+      setIsUpdatingTransactions(true);
+      try {
+        // Clean up old transactions first (older than 1 hour on activity page visit)
+        await cleanupOldTransactions(1);
+
+        // Update pending transaction statuses
+        await updatePendingTransactionStatuses();
+
+        // Clean up any newly confirmed transactions
+        await cleanupConfirmedTransactions();
+
+        // Refresh the pending transactions list
+        const data = await getTransactionsByWallet(db, wallet.id);
+        setPendingTransactions(data);
+
+        console.log('Transaction statuses updated on activity page load');
+      } catch (error) {
+        console.error('Error updating transactions on page load:', error);
+      } finally {
+        setIsUpdatingTransactions(false);
+      }
+    };
+
+    // Run when wallet changes or when page first loads
+    if (wallet?.id && db) {
+      updateTransactionsOnPageLoad();
+    }
+  }, [wallet?.id, db]); // Only run when wallet or db changes
+
+  // Also check transactions when user returns to the page (window focus)
+  useEffect(() => {
+    const handleWindowFocus = async () => {
+      if (!wallet?.id || !db || isUpdatingTransactions) return;
+
+      // Only update if it's been more than 30 seconds since last update
+      const lastUpdate = localStorage.getItem('lastTransactionUpdate');
+      const now = Date.now();
+      if (lastUpdate && (now - parseInt(lastUpdate)) < 30000) return;
+
+      setIsUpdatingTransactions(true);
+      try {
+        await updatePendingTransactionStatuses();
+        await cleanupConfirmedTransactions();
+        const data = await getTransactionsByWallet(db, wallet.id);
+        setPendingTransactions(data);
+        localStorage.setItem('lastTransactionUpdate', now.toString());
+        console.log('Transaction statuses updated on window focus');
+      } catch (error) {
+        console.error('Error updating transactions on focus:', error);
+      } finally {
+        setIsUpdatingTransactions(false);
+      }
+    };
+
+    window.addEventListener('focus', handleWindowFocus);
+    return () => window.removeEventListener('focus', handleWindowFocus);
+  }, [wallet?.id, db, isUpdatingTransactions]);
 
   const TOKEN_LABELS = tokensList.reduce((acc: any, token: any) => {
     acc[token.token_id] = token.symbol;
@@ -150,6 +220,19 @@ export const WalletActivity = () => {
 
   return (
     <div className="mx-4">
+      {/* Show updating indicator and pending count */}
+      {isUpdatingTransactions && (
+        <div className="mt-4 mb-2 p-2 bg-blue-100 rounded-lg text-center text-sm text-blue-700">
+          Updating transaction statuses...
+        </div>
+      )}
+
+      {pendingTransactions.length > 0 && !isUpdatingTransactions && (
+        <div className="mt-4 mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg text-center text-sm text-yellow-800">
+          {pendingTransactions.length} pending transaction{pendingTransactions.length !== 1 ? 's' : ''}
+        </div>
+      )}
+
       <div className="mt-4 flex flex-col gap-4 ">
         {activity.map((item: any, index: number)=>{
           const date = new Date(item.timestamp*1000);
@@ -173,7 +256,7 @@ export const WalletActivity = () => {
                 <div className="w-full flex flex-row justify-between">
                   <div>
                     {
-                      item.confirmations === '0' && (
+                      !item.confirmations && (
                         <div className="">Pending</div>
                       )
                     }

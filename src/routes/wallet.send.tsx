@@ -262,6 +262,7 @@ export const WalletSend = () => {
         refreshAccount();
         setTransactionBroadcastingStatus('success');
       } else {
+        console.error('Transaction broadcast failed:', response.status, await response.text());
         setTransactionBroadcastingStatus('error');
       }
     } catch (e) {

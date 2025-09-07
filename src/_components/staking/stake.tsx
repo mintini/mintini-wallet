@@ -254,6 +254,7 @@ export const DelegationStake = ({ delegationId }) => {
         refreshAccount();
         setTransactionBroadcastingStatus('success');
       } else {
+        console.error('Transaction broadcast failed:', response.status, await response.text());
         setTransactionBroadcastingStatus('error');
       }
     } catch (e) {

@@ -7,7 +7,11 @@ import {
   loadWallets,
   getState,
   getTransactionsByWallet,
-  removeOneTransaction
+  removeOneTransaction,
+  cleanupOldPendingTransactions,
+  updateTransactionConfirmations,
+  removeConfirmedTransactions,
+  getPendingTransactionsCount
 } from "../lib/storage/database.ts";
 import {useDatabase} from "../context/Database.tsx";
 import {useEncryptionKey} from "../context/EncryptionKey.tsx";
@@ -114,6 +118,77 @@ export const MintlayerProvider  = ({ children }) => {
     setPendingTransactions(data);
   }
 
+  // Transaction cleanup functions
+  const cleanupOldTransactions = async (maxAgeHours = 24) => {
+    if (!wallet?.id || !db) return 0;
+    const removedCount = await cleanupOldPendingTransactions(db, wallet.id, maxAgeHours);
+    if (removedCount > 0) {
+      console.log(`Cleaned up ${removedCount} old pending transactions`);
+      await getPendingTransactions(); // Refresh pending transactions
+    }
+    return removedCount;
+  }
+
+  const cleanupConfirmedTransactions = async () => {
+    if (!wallet?.id || !db) return 0;
+    const removedCount = await removeConfirmedTransactions(db, wallet.id);
+    if (removedCount > 0) {
+      console.log(`Cleaned up ${removedCount} confirmed transactions`);
+      await getPendingTransactions(); // Refresh pending transactions
+    }
+    return removedCount;
+  }
+
+  const forceRemoveTransaction = async (txId) => {
+    if (!db) return;
+    await removeOneTransaction(db, txId);
+    await getPendingTransactions(); // Refresh pending transactions
+    console.log(`Force removed transaction: ${txId}`);
+  }
+
+  const checkTransactionStatus = async (txId) => {
+    if (!addresses.length) return null;
+    try {
+      const response = await fetch(`https://api.mintini.app/batch_data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: '/transaction/:txid',
+          ids: [txId],
+          network
+        })
+      });
+      const data = await response.json();
+      return data.results?.[0] || null;
+    } catch (error) {
+      console.error('Error checking transaction status:', error);
+      return null;
+    }
+  }
+
+  const updatePendingTransactionStatuses = async () => {
+    if (!wallet?.id || !db || !pendingTransactions.length) return;
+
+    let updatedCount = 0;
+    for (const tx of pendingTransactions) {
+      if (tx.confirmations === '0') {
+        const status = await checkTransactionStatus(tx.id);
+        if (status && status.confirmations !== '0') {
+          await updateTransactionConfirmations(db, tx.id, status.confirmations);
+          updatedCount++;
+        }
+      }
+    }
+
+    if (updatedCount > 0) {
+      console.log(`Updated ${updatedCount} transaction confirmations`);
+      await getPendingTransactions(); // Refresh pending transactions
+    }
+    return updatedCount;
+  }
+
   useEffect(() => {
     if(!wallets.length) return;
     if(!db) return;
@@ -195,6 +270,9 @@ export const MintlayerProvider  = ({ children }) => {
     if(!wallet) return;
     getAddresses();
     getPendingTransactions();
+
+    // Auto-cleanup old transactions when wallet loads or chain height changes
+    cleanupOldTransactions(24); // Remove transactions older than 24 hours
   }, [
     selectedWallet,
     network,
@@ -211,6 +289,20 @@ export const MintlayerProvider  = ({ children }) => {
     //getTokens();
     //getUtxos();
   }, [addresses]);
+
+  // Periodic cleanup and status updates
+  useEffect(() => {
+    if (!wallet?.id || !db) return;
+
+    const interval = setInterval(async () => {
+      // Check for transaction status updates every 2 minutes
+      await updatePendingTransactionStatuses();
+      // Clean up confirmed transactions
+      await cleanupConfirmedTransactions();
+    }, 2 * 60 * 1000); // 2 minutes
+
+    return () => clearInterval(interval);
+  }, [wallet?.id, db, pendingTransactions.length]);
 
   useEffect(() => {
     if(initialized) return;
@@ -281,6 +373,14 @@ export const MintlayerProvider  = ({ children }) => {
     delegations,
     lastBlockTime,
     reloadWallet,
+
+    // Transaction cleanup functions
+    pendingTransactions,
+    cleanupOldTransactions,
+    cleanupConfirmedTransactions,
+    forceRemoveTransaction,
+    checkTransactionStatus,
+    updatePendingTransactionStatuses,
   }
 
   return (
