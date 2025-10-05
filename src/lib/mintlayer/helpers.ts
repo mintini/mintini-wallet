@@ -27,7 +27,7 @@ const selectUTXOsForTransfer = (utxos: UTXO[], amount: bigint, token_id: string)
     .filter((utxo) => utxo.utxo.type !== 'Htlc')
     .filter((utxo) => {
       if(token_id === null){
-        return true;
+        return utxo.utxo.value.type === 'Coin';
       }
       return utxo.utxo.value.token_id === token_id;
     });
