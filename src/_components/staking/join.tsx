@@ -17,7 +17,7 @@ export const JoinPool = ({ poolId }) => {
   const [ state, setState ] = useState('form');
   const [ transactionBroadcastingStatus, setTransactionBroadcastingStatus ] = useState('');
   const { db } = useDatabase();
-  const { utxos, network, addresses, addressesPrivateKeys, wallet, refreshAccount, tokens } = useMintlayer();
+  const { utxos, network, addresses, addressesPrivateKeys, wallet, refreshAccount, tokens, chainHeight } = useMintlayer();
 
   const [ transactionHEX, setTransactionHEX ] = useState('');
 
@@ -186,6 +186,8 @@ export const JoinPool = ({ poolId }) => {
         transaction,
         optUtxos,
         index,
+        { pool_info: {}, order_info: {}, },
+        BigInt(chainHeight),
         network,
       );
       return witness;

@@ -194,6 +194,8 @@ export const DelegationWithdraw = ({delegations}) => {
       transaction,
       optUtxos,
       0,
+      { pool_info: {}, order_info: {}, },
+      BigInt(chainHeight),
       network,
     )];
     const encodedSignedTransaction = encode_signed_transaction(transaction, mergeUint8Arrays(encodedWitnesses));
