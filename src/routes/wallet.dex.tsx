@@ -239,9 +239,22 @@ export const WalletDex = () => {
   }, [transactionJSONrepresentation]);
 
 
+  // useEffect(() => {
+  //   const fetchPairs = async () => {
+  //     const response = await fetch(`https://api-server${network===1?'-lovelace':''}.mintlayer.org/api/v2/order`);
+  //     if(!response.ok) {
+  //       return;
+  //     }
+  //     const data = await response.json();
+  //     setPairs(data);
+  //   }
+  //   fetchPairs();
+  // }, []);
+
   useEffect(() => {
+    console.log('sellToken, buyToken', sellToken, buyToken);
     const fetchPairs = async () => {
-      const response = await fetch(`https://api-server${network===1?'-lovelace':''}.mintlayer.org/api/v2/order`);
+      const response = await fetch(`https://api-server${network===1?'-lovelace':''}.mintlayer.org/api/v2/order/pair/${sellToken.replace('Coin', network===1?'TML':'ML')}_${buyToken}`);
       if(!response.ok) {
         return;
       }
@@ -249,7 +262,7 @@ export const WalletDex = () => {
       setPairs(data);
     }
     fetchPairs();
-  }, []);
+  }, [sellToken, buyToken]);
 
   useEffect(() => {
     const fetchTokens = async () => {
@@ -328,8 +341,8 @@ export const WalletDex = () => {
     }
   }
 
-  const buyTokenSymbol = tokensList.find((item: any) => item.token_id === buyToken)?.symbol;
-  // const sellTokenSymbol = tokens.find((item: any) => item.ticker === sellToken)?.symbol;
+  const buyTokenSymbol = tokensList.find((item: any) => item.token_id === buyToken)?.symbol || 'ML';
+  const sellTokenSymbol = tokensList.find((item: any) => item.token_id === sellToken)?.symbol || 'ML';
 
   const handleBroadcast = async () => {
     setState('broadcast');
@@ -461,7 +474,7 @@ export const WalletDex = () => {
     setTokenBuySelectorOpened(false)
   }
 
-  const sellTokenSymbol = 'ML';
+  const selectedSellToken = tokens.find((item: any) => item.symbol === sellTokenSymbol);
 
   return (
     <>
@@ -486,7 +499,7 @@ export const WalletDex = () => {
             </div>
             <div className="flex flex-row justify-between gap-4 mt-1">
               <div>
-                {tokens[0]?.balance}
+                {selectedSellToken?.balance}
               </div>
               <button className="rounded-full bg-mint-dark px-2 text-white" onClick={handleSetSell(0.5)}>
                 50%
