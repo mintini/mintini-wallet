@@ -9,7 +9,9 @@ import {
   encode_input_for_utxo,
   encode_outpoint_source_id, encode_signed_transaction, encode_transaction, encode_witness,
   estimate_transaction_size, SignatureHashType,
-  SourceId
+  encode_witness_no_signature,
+  SourceId,
+  TxAdditionalInfo
 } from "../lib/mintlayer/wasm_wrappers";
 import {getOutputs, mergeUint8Arrays, selectUTXOs} from "../lib/mintlayer/helpers.ts";
 import {TokenSelector} from "../_components/TokenSelector.tsx";
@@ -19,7 +21,7 @@ export const WalletDex = () => {
   const { telegram } = useTelegram();
   const [ state, setState ] = useState('form');
   const { db } = useDatabase();
-  const { tokens, addresses, utxos, network, addressesPrivateKeys, refreshAccount, wallet } = useMintlayer();
+  const { tokens, addresses, utxos, network, addressesPrivateKeys, refreshAccount, wallet, chainHeight } = useMintlayer();
 
   const [sell, setSell] = useState(0);
 
@@ -191,6 +193,7 @@ export const WalletDex = () => {
           Amount.from_atoms(command.fill_atoms),
           command.destination,
           BigInt(nonce),
+          BigInt(chainHeight),
           network
         );
       });
@@ -434,6 +437,11 @@ export const WalletDex = () => {
 
     const encodedWitnesses = transactionJSONrepresentation.inputs
       .map((input: any, index: number) => {
+
+        if(input?.input?.command === 'FillOrder') {
+          return encode_witness_no_signature();
+        }
+
         let address = '';
         if (input.utxo) {
           address = input.utxo.destination;
@@ -441,6 +449,58 @@ export const WalletDex = () => {
           address = input.input.destination;
         }
         const addressPrivateKey = addressesPrivateKeys[address];
+
+        const order_info = {};
+
+        const order_id = order?.order_id;
+        const orderdata = pairs.find((pair: any) => pair.order_id === order_id);
+
+        order_info[order_id] = {
+          initially_asked: {
+            ...(orderdata.ask_currency.type === 'Coin'
+              ? {
+                coins: {
+                  atoms: orderdata.initially_asked.atoms,
+                },
+              }
+              : {
+                tokens: {
+                  token_id: orderdata.ask_currency.token_id,
+                  amount: {
+                    atoms: orderdata.initially_asked.atoms,
+                  },
+                },
+              }),
+          },
+          initially_given: {
+            ...(orderdata.give_currency.type === 'Coin'
+              ? {
+                coins: {
+                  atoms: orderdata.initially_given.atoms,
+                },
+              }
+              : {
+                tokens: {
+                  token_id: orderdata.give_currency.token_id,
+                  amount: {
+                    atoms: orderdata.initially_given.atoms,
+                  },
+                },
+              }),
+          },
+          ask_balance: {
+            atoms: orderdata.ask_balance.atoms,
+          },
+          give_balance: {
+            atoms: orderdata.give_balance.atoms,
+          },
+        }
+
+        const additionalInfo: TxAdditionalInfo = {
+          pool_info: {},
+          order_info,
+        };
+
         const witness = encode_witness(
           SignatureHashType.ALL,
           addressPrivateKey,
@@ -448,6 +508,8 @@ export const WalletDex = () => {
           transaction,
           mergeUint8Arrays(optUtxos),
           index,
+          additionalInfo,
+          BigInt(chainHeight),
           network,
         );
         return witness;

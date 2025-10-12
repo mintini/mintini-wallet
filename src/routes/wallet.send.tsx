@@ -32,7 +32,7 @@ export const WalletSend = () => {
 
   const [ txPreviewDetails, setTxPreviewDetails ] = useState(false);
 
-  const { tokens, utxos, network, addresses, addressesPrivateKeys, wallet, refreshAccount } = useMintlayer();
+  const { tokens, utxos, network, addresses, addressesPrivateKeys, wallet, refreshAccount, chainHeight } = useMintlayer();
   const [ state, setState ] = useState('form');
   const [ recipient, setRecipient ] = useState('');
   const [ amountDecimal, setAmountDecimal ] = useState(0);
@@ -321,6 +321,8 @@ export const WalletSend = () => {
         transaction,
         optUtxos,
         index,
+        { pool_info: {}, order_info: {}, },
+        BigInt(chainHeight),
         network,
       );
       return witness;

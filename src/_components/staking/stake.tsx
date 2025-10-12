@@ -20,7 +20,7 @@ export const DelegationStake = ({ delegationId }) => {
   const { db } = useDatabase();
   const tokenDecimals = 11;
   const stakeAmount = BigInt(Math.trunc(amountDecimal * Math.pow(10, tokenDecimals)))
-  const { tokens, utxos, network, addresses, addressesPrivateKeys, wallet, refreshAccount } = useMintlayer();
+  const { tokens, utxos, network, addresses, addressesPrivateKeys, wallet, refreshAccount, chainHeight } = useMintlayer();
 
   const [ transactionHEX, setTransactionHEX ] = useState('');
 
@@ -217,6 +217,8 @@ export const DelegationStake = ({ delegationId }) => {
         transaction,
         optUtxos,
         index,
+        { pool_info: {}, order_info: {}, },
+        BigInt(chainHeight),
         network,
       );
       return witness;
