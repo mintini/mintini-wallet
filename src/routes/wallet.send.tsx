@@ -225,6 +225,12 @@ export const WalletSend = () => {
   const handleUpdateAmount = (e: any) => {
     // set only if it is a number or dot
     const value = e.target.value.replace(',','.');
+
+    if(value === ',' || value === '.') {
+      setAmountDecimal('0.');
+      return;
+    }
+
     if (value.match(/^[0-9]*\.?[0-9]*$/)) {
       //if(e.target.value.toString().split('.')[1].length <= 11) {
       setAmountDecimal(value);
