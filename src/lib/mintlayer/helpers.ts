@@ -231,7 +231,7 @@ function analysisTransaction({tx, addresses}) {
 
   // filter out unsupported transactions
   const unsupportedInput = inputs.filter(input => input?.utxo?.type === 'IssueNft' || input?.utxo?.type === 'IssueFungibleToken' || input?.utxo?.type === 'Htlc');
-  const unsupportedOutput = outputs.filter(output => output.type === 'IssueNft' || output.type === 'IssueFungibleToken' || output.type === 'Htlc');
+  const unsupportedOutput = outputs.filter(output => output.type === 'IssueNft' || output.type === 'IssueFungibleToken' || output.type === 'Htlc' || output.type === 'CreateOrder');
   if(unsupportedInput.length > 0 || unsupportedOutput.length > 0) {
     activity.type = 'unsupported';
     return activity;
@@ -375,6 +375,7 @@ function analysisTransaction({tx, addresses}) {
 
       // let's calculate the amount send to other
       const outputAmount = otherOutputs.reduce((acc, output) => {
+        console.log('outout', output);
         token = output.value.type === 'TokenV1' ? output.value.token_id : 'Coin';
         return acc.plus(getDecimalAmount(output.value.amount.decimal));
       }, new Decimal(0));

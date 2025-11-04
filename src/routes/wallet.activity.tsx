@@ -155,7 +155,8 @@ export const WalletActivity = () => {
         })
       });
       const data = await addresses_data.json();
-      const txs = data.results.map((item: any) => item.transaction_history).flat();
+      const txs_ = data.results.map((item: any) => item.transaction_history).flat();
+      const txs = txs_.filter((item: any) => item);
       const txs_data = await fetch('https://api.mintini.app/batch_data', {
         method: 'POST',
         headers: {
@@ -224,12 +225,6 @@ export const WalletActivity = () => {
       {isUpdatingTransactions && (
         <div className="mt-4 mb-2 p-2 bg-blue-100 rounded-lg text-center text-sm text-blue-700">
           Updating transaction statuses...
-        </div>
-      )}
-
-      {pendingTransactions.length > 0 && !isUpdatingTransactions && (
-        <div className="mt-4 mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg text-center text-sm text-yellow-800">
-          {pendingTransactions.length} pending transaction{pendingTransactions.length !== 1 ? 's' : ''}
         </div>
       )}
 
