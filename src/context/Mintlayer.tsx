@@ -173,12 +173,10 @@ export const MintlayerProvider  = ({ children }) => {
 
     let updatedCount = 0;
     for (const tx of pendingTransactions) {
-      if (tx.confirmations === '0') {
-        const status = await checkTransactionStatus(tx.id);
-        if (status && status.confirmations !== '0') {
-          await updateTransactionConfirmations(db, tx.id, status.confirmations);
-          updatedCount++;
-        }
+      const status = await checkTransactionStatus(tx.id);
+      if (status && status.confirmations) {
+        await updateTransactionConfirmations(db, tx.id, status.confirmations);
+        updatedCount++;
       }
     }
 

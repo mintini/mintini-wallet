@@ -255,7 +255,6 @@ export const WalletDex = () => {
   // }, []);
 
   useEffect(() => {
-    console.log('sellToken, buyToken', sellToken, buyToken);
     const fetchPairs = async () => {
       const response = await fetch(`https://api-server${network===1?'-lovelace':''}.mintlayer.org/api/v2/order/pair/${sellToken.replace('Coin', network===1?'TML':'ML')}_${buyToken}`);
       if(!response.ok) {
