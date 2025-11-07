@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {useEffect} from "react";
-import {Link, useLocation, useNavigate} from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import {useMintlayer} from "../context/Mintlayer.tsx";
 import {Outlet} from "react-router";
 import {getStakingPoolRating} from "../helpers/pools.ts";
@@ -72,8 +72,6 @@ export const WalletPools = () => {
     return !account_pools.some((account_pool) => account_pool.pool_id === pool.pool_id);
   }
 
-  const poolToOpen = account_pools[0] || pools[0];
-
   const additionalFilters = () => {
     return true;
   }
@@ -85,15 +83,6 @@ export const WalletPools = () => {
           <div className="text-black text-xl font-light">Total Staked Value</div>
           <div className="text-4xl font-medium">0.00$</div>
           <div className="text-xl">{total_balance} ML</div>
-        </div>
-
-        <div className="flex flex-row gap-4 mx-4 justify-center">
-          <Link to={`/wallet/pools/` + poolToOpen?.pool_id} className="border border-mint-dark px-6 py-3 rounded-xl">
-            Stake
-          </Link>
-          {/*<div className="border border-mint-dark px-6 py-3 rounded-xl">*/}
-          {/*  Widthdraw*/}
-          {/*</div>*/}
         </div>
       </div>
 
