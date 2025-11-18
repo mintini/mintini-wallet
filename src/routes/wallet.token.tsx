@@ -1,18 +1,21 @@
 import {useEffect, useState} from "react";
-import {Link, useNavigate} from "react-router-dom";
+import {Link} from "react-router-dom";
 import {useTelegram} from "../context/Telegram.tsx";
 import {useMintlayer} from "../context/Mintlayer.tsx";
 import QRCode from "react-qr-code";
+import {useParams} from "react-router";
 
-const COINS: any = {
-  'ML': {
-    icon: '/coins/ml.svg',
-  }
-};
+// const COINS: any = {
+//   'ML': {
+//     icon: '/coins/ml.svg',
+//   }
+// };
 
-export const WalletMain = () => {
+export const WalletToken = () => {
+  // get params from route
+  const { token_id } = useParams();
+  console.log('token_id', token_id);
   const { telegram } = useTelegram();
-  const navigate = useNavigate();
   const {
     addresses,
     tokens: token_list,
@@ -54,7 +57,6 @@ export const WalletMain = () => {
 
   const tokens = token_list.map((item: any) => {
     return {
-      token_id: item.token_id,
       ticker: item.symbol,
       balance: item.balance,
       balance_formatted: formatBalance(item.balance),
@@ -84,13 +86,30 @@ export const WalletMain = () => {
     }, 1000);
   };
 
-  console.log('tokens', tokens);
-
   const total = tokens.reduce((acc: number, item: any) => acc + item.value, 0);
 
   const total_change = tokens.reduce((acc: number, item: any) => acc + item.value * item.value_change_percent / 100, 0);
 
   const change_percent = tokens.reduce((acc: number, item: any) => acc + item.value_change_percent, 0);
+
+  const token_data = [
+    {
+      label: 'Name',
+      value: 'Mintlayer'
+    },
+    {
+      label: 'Symbol',
+      value: 'ML'
+    },
+    {
+      label: 'Decimals',
+      value: '8'
+    },
+    {
+      label: 'Total supply',
+      value: '1,000,000,000'
+    }
+  ];
 
   return (
     <>
@@ -123,7 +142,7 @@ export const WalletMain = () => {
               <img src='/icons/qr-code-scanner.svg' className="w-8 h-8" alt="qr-code-scanner"/>
               Receive
             </div>
-            <Link to="/wallet/send" className="bg-mint border-mint-dark px-6 pt-5 pb-3 rounded-xl flex items-center flex-col">
+            <Link to={`/wallet/send/` + token_id} className="bg-mint border-mint-dark px-6 pt-5 pb-3 rounded-xl flex items-center flex-col">
               <img src='/icons/send.svg' className="w-8 h-8" alt="qr-code-scanner"/>
               Send
             </Link>
@@ -131,10 +150,17 @@ export const WalletMain = () => {
               <img src='/icons/swap.svg' className="w-8 h-8" alt="qr-code-scanner"/>
               Swap
             </Link>
-            <Link to="/wallet/pools" className="bg-mint border-mint-dark px-6 pt-5 pb-3 rounded-xl flex items-center flex-col">
-              <img src='/icons/grow.svg' className="w-8 h-8" alt="qr-code-scanner"/>
-              Stake
-            </Link>
+            {token_id === 'coin' ? (
+              <Link to="/wallet/pools" className="bg-mint border-mint-dark px-6 pt-5 pb-3 rounded-xl flex items-center flex-col">
+                <img src='/icons/grow.svg' className="w-8 h-8" alt="qr-code-scanner"/>
+                Stake
+              </Link>
+            ) : (
+              <div className="bg-mint border-mint-dark px-6 pt-5 pb-3 rounded-xl flex items-center flex-col">
+                <img src='/icons/grow.svg' className="w-8 h-8" alt="qr-code-scanner"/>
+                More
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -144,65 +170,23 @@ export const WalletMain = () => {
       </div>
 
       <div className="my-4">
-        {/*<div className="flex flex-row justify-center gap-3">*/}
-        {/*  {*/}
-        {/*    [*/}
-        {/*      'Tokens',*/}
-        {/*      // 'NFTs'*/}
-        {/*    ].map((item, index) => (*/}
-        {/*      <div key={index} onClick={() => setTab(index)} className={`font-bold transition-all border border-b-4 border-mint-dark px-2 py-3 rounded-xl ${tab===index?'text-black bg-mint border-t-4 border-b-0 border-t-mint-dark':'text-mint-dark '}`}>*/}
-        {/*        {item}*/}
-        {/*      </div>*/}
-        {/*    ))*/}
-        {/*  }*/}
-        {/*</div>*/}
-
-        {/*{*/}
-        {/*  tokensLoading && (*/}
-        {/*    <div className="mt-4 mx-4">Fetching balance</div>*/}
-        {/*  )*/}
-        {/*}*/}
         <div className="flex flex-col py-4 mx-4 gap-1">
           {
-            tokens.map((_: any, index: any) => (
-              <div key={index} className="flex flex-row justify-between items-center border border-mint-dark px-2 py-1 rounded-xl" onClick={() => navigate(`/wallet/token/${_.token_id || 'coin'}`)}>
-                <div className="flex flex-row gap-2 items-center">
+            token_data && (
+              <div>
+                <div className="text-xl px-2 mb-2 font-bold">Token data</div>
+                <div className="flex flex-col gap-1 bg-mint rounded-2xl p-1">
                   {
-                    COINS[_.ticker] ? (
-                      <div className="rounded-full w-14 h-14 bg-white flex flex-col justify-center items-center">
-                        <img src={COINS[_.ticker].icon} alt={_.ticker} className="w-8 h-8"/>
+                    token_data.map((item: any, index: number) => (
+                      <div key={index} className={`flex flex-row justify-between bg-mint-light px-2 py-1 ${index===0?'rounded-t-xl':''} ${index===token_data.length-1?'rounded-b-xl':''}`}>
+                        <div>{item.label}</div>
+                        <div>{item.value}</div>
                       </div>
-                    ) : (
-                      <div className="rounded-full w-14 h-14 bg-mint flex flex-col justify-center items-center">
-                        {_.ticker[0]}
-                      </div>
-                    )
+                    ))
                   }
-                  <div>
-                    <div className="font-bold text-2xl">
-                      {_.ticker}
-                    </div>
-                    <div className="text-sm text-mint-dark text-xl">
-                      {_.balance_formatted} {_.ticker}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end">
-                  <div className="font-medium text-2xl">
-                    {
-                      isTestnet ? '-' : '$' + _.value.toFixed(2)
-                    }
-                  </div>
-                  {_.value_change !== 0 ? (
-                    <div className={`font-normal text-xl ${_.value_change < 0 ? 'text-red-700' : 'text-green-700'}`}>
-                      {
-                        isTestnet ? '-' : (_.value_change < 0 ? '-' : '+') + '$' + Math.abs(_.value_change.toFixed(2))
-                      }
-                    </div>
-                  ) : <></>}
                 </div>
               </div>
-            ))
+            )
           }
         </div>
       </div>
@@ -219,7 +203,7 @@ export const WalletMain = () => {
             </div>
           </div>
           <div className="text-center mt-8 mb-4">
-            tap addess to copy
+            tap address to copy
           </div>
           <div className="break-all font-mono text-2xl text-center relative"
                onClick={() => handleCopyToClipboard(addresses[addressIndex])}>
