@@ -17,6 +17,7 @@ import {WalletSend} from "./routes/wallet.send.tsx";
 import {WalletDex} from "./routes/wallet.dex.tsx";
 import {WalletActivity} from "./routes/wallet.activity.tsx";
 import {WalletLayout} from "./routes/wallet._layout.tsx";
+import {WalletToken} from "./routes/wallet.token.tsx";
 import {Settings} from "./routes/settings.tsx";
 import {SettingsSecurity} from "./routes/settings.security.tsx";
 import {SettingsDeveloper} from "./routes/settings.developer.tsx";
@@ -112,6 +113,10 @@ const router = createBrowserRouter([
             element: <WalletMain />,
           },
           {
+            path: 'token/:token_id',
+            element: <WalletToken />,
+          },
+          {
             path: 'pools',
             element: <WalletPools />,
             children: [
@@ -122,7 +127,7 @@ const router = createBrowserRouter([
             ],
           },
           {
-            path: 'send',
+            path: 'send/:token_id?',
             element: <WalletSend />,
           },
           {

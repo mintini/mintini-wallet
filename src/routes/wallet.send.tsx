@@ -18,6 +18,7 @@ import {
 import {TokenSelector} from "../_components/TokenSelector.tsx";
 import {saveTransactions} from "../lib/storage/database.ts";
 import {useDatabase} from "../context/Database.tsx";
+import {useParams} from "react-router";
 
 const Link = React.memo(DomLink, (prevProps, nextProps) => {
   // Prevent re-rendering if the to prop is the same
@@ -26,6 +27,7 @@ const Link = React.memo(DomLink, (prevProps, nextProps) => {
 
 export const WalletSend = () => {
   const { telegram } = useTelegram();
+  const { token_id: route_token_id } = useParams();
   const navigate = useNavigate();
 
   const [ sendToken, setSendToken ] = useState(null);
@@ -59,6 +61,12 @@ export const WalletSend = () => {
   const toggleTxPreviewDetails = () => {
     setTxPreviewDetails(!txPreviewDetails);
   }
+
+  useEffect(() => {
+    if(route_token_id) {
+      setSendToken(tokens.find((token: any) => token.token_id === route_token_id));
+    }
+  }, [route_token_id]);
 
   useEffect(() => {
     // if only one token, select it
@@ -397,7 +405,7 @@ export const WalletSend = () => {
               </div>
 
               <div className="flex flex-row gap-2">
-                <Link to="/wallet" className="bg-mint w-full py-4 rounded-2xl text-center">
+                <Link to={`/wallet` + (route_token_id ? `/token/${route_token_id}` : '')} className="bg-mint w-full py-4 rounded-2xl text-center">
                   Cancel
                 </Link>
                 <button onClick={handleBuildTransaction} disabled={!valid} className={`${valid ? 'bg-mint' : 'bg-gray-200'} w-full py-4 rounded-2xl`}>

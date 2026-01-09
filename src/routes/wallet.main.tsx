@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {useTelegram} from "../context/Telegram.tsx";
 import {useMintlayer} from "../context/Mintlayer.tsx";
 import QRCode from "react-qr-code";
@@ -12,6 +12,7 @@ const COINS: any = {
 
 export const WalletMain = () => {
   const { telegram } = useTelegram();
+  const navigate = useNavigate();
   const {
     addresses,
     tokens: token_list,
@@ -53,6 +54,7 @@ export const WalletMain = () => {
 
   const tokens = token_list.map((item: any) => {
     return {
+      token_id: item.token_id,
       ticker: item.symbol,
       balance: item.balance,
       balance_formatted: formatBalance(item.balance),
@@ -81,6 +83,8 @@ export const WalletMain = () => {
       setCopySuccess('');
     }, 1000);
   };
+
+  console.log('tokens', tokens);
 
   const total = tokens.reduce((acc: number, item: any) => acc + item.value, 0);
 
@@ -161,7 +165,7 @@ export const WalletMain = () => {
         <div className="flex flex-col py-4 mx-4 gap-1">
           {
             tokens.map((_: any, index: any) => (
-              <div key={index} className="flex flex-row justify-between items-center border border-mint-dark px-2 py-1 rounded-xl">
+              <div key={index} className="flex flex-row justify-between items-center border border-mint-dark px-2 py-1 rounded-xl" onClick={() => navigate(`/wallet/token/${_.token_id || 'coin'}`)}>
                 <div className="flex flex-row gap-2 items-center">
                   {
                     COINS[_.ticker] ? (
