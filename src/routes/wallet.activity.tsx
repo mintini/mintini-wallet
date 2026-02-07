@@ -44,12 +44,27 @@ export const WalletActivity = () => {
   const [ tokensList, setTokensList ] = useState<any>([]);
 
   useEffect(() => {
+    const abortController = new AbortController();
     const fetchTokens = async () => {
-      const response = await fetch('https://api.mintini.app/dex_tokens?network=' + network);
-      const data = await response.json();
-      setTokensList(data);
+      try {
+        const response = await fetch('https://api.mintini.app/dex_tokens?network=' + network, {
+          signal: abortController.signal
+        });
+        const data = await response.json();
+        setTokensList(data);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Tokens fetch aborted');
+        } else {
+          console.error('Error fetching tokens:', error);
+        }
+      }
     }
     fetchTokens();
+
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
   useEffect(() => {
@@ -63,15 +78,23 @@ export const WalletActivity = () => {
   }, [addresses]);
 
   useEffect(() => {
+    let isMounted = true;
     const getPendingTransactions = async () => {
       const data = await getTransactionsByWallet(db, wallet.id);
-      setPendingTransactions(data);
+      if (isMounted) {
+        setPendingTransactions(data);
+      }
     }
     getPendingTransactions();
+
+    return () => {
+      isMounted = false;
+    };
   }, [])
 
   // Update transaction statuses when page loads
   useEffect(() => {
+    const abortController = new AbortController();
     const updateTransactionsOnPageLoad = async () => {
       if (!wallet?.id || !db || isUpdatingTransactions) return;
 
@@ -81,7 +104,7 @@ export const WalletActivity = () => {
         await cleanupOldTransactions(1);
 
         // Update pending transaction statuses
-        await updatePendingTransactionStatuses();
+        await updatePendingTransactionStatuses(abortController.signal);
 
         // Clean up any newly confirmed transactions
         await cleanupConfirmedTransactions();
@@ -92,7 +115,11 @@ export const WalletActivity = () => {
 
         console.log('Transaction statuses updated on activity page load');
       } catch (error) {
-        console.error('Error updating transactions on page load:', error);
+        if (error?.name === 'AbortError') {
+          console.log('Transaction update aborted');
+        } else {
+          console.error('Error updating transactions on page load:', error);
+        }
       } finally {
         setIsUpdatingTransactions(false);
       }
@@ -102,10 +129,16 @@ export const WalletActivity = () => {
     if (wallet?.id && db) {
       updateTransactionsOnPageLoad();
     }
+
+    return () => {
+      abortController.abort();
+    };
   }, [wallet?.id, db]); // Only run when wallet or db changes
 
   // Also check transactions when user returns to the page (window focus)
   useEffect(() => {
+    let abortController = new AbortController();
+
     const handleWindowFocus = async () => {
       if (!wallet?.id || !db || isUpdatingTransactions) return;
 
@@ -114,23 +147,34 @@ export const WalletActivity = () => {
       const now = Date.now();
       if (lastUpdate && (now - parseInt(lastUpdate)) < 30000) return;
 
+      // Abort previous request if still running
+      abortController.abort();
+      abortController = new AbortController();
+
       setIsUpdatingTransactions(true);
       try {
-        await updatePendingTransactionStatuses();
+        await updatePendingTransactionStatuses(abortController.signal);
         await cleanupConfirmedTransactions();
         const data = await getTransactionsByWallet(db, wallet.id);
         setPendingTransactions(data);
         localStorage.setItem('lastTransactionUpdate', now.toString());
         console.log('Transaction statuses updated on window focus');
       } catch (error) {
-        console.error('Error updating transactions on focus:', error);
+        if (error?.name === 'AbortError') {
+          console.log('Transaction update on focus aborted');
+        } else {
+          console.error('Error updating transactions on focus:', error);
+        }
       } finally {
         setIsUpdatingTransactions(false);
       }
     };
 
     window.addEventListener('focus', handleWindowFocus);
-    return () => window.removeEventListener('focus', handleWindowFocus);
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+      abortController.abort();
+    };
   }, [wallet?.id, db, isUpdatingTransactions]);
 
   const TOKEN_LABELS = tokensList.reduce((acc: any, token: any) => {
@@ -141,41 +185,58 @@ export const WalletActivity = () => {
   TOKEN_LABELS.Coin = 'ML';
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     // fetch activity from endpoint
     const fetchActivity = async () => {
-      const addresses_data = await fetch('https://api.mintini.app/batch_data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: '/address/:address',
-          ids: addresses,
-          network
-        })
-      });
-      const data = await addresses_data.json();
-      const txs_ = data.results.map((item: any) => item.transaction_history).flat();
-      const txs = txs_.filter((item: any) => item);
-      const txs_data = await fetch('https://api.mintini.app/batch_data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: '/transaction/:txid',
-          ids: txs,
-          network
-        })
-      });
-      const txs_data_json = await txs_data.json();
-      const txs_data_json_results = txs_data_json.results;
-      const parsedData = txToActivity(txs_data_json_results, addresses);
-      setActivity(parsedData);
+      try {
+        const addresses_data = await fetch('https://api.mintini.app/batch_data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            type: '/address/:address',
+            ids: addresses,
+            network
+          }),
+          signal: abortController.signal
+        });
+        const data = await addresses_data.json();
+        const txs_ = data.results.map((item: any) => item.transaction_history).flat();
+        const txs = txs_.filter((item: any) => item);
+
+        const txs_data = await fetch('https://api.mintini.app/batch_data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            type: '/transaction/:txid',
+            ids: txs,
+            network
+          }),
+          signal: abortController.signal
+        });
+        const txs_data_json = await txs_data.json();
+        const txs_data_json_results = txs_data_json.results;
+        const parsedData = txToActivity(txs_data_json_results, addresses);
+        setActivity(parsedData);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Activity fetch aborted');
+        } else {
+          console.error('Error fetching activity:', error);
+        }
+      }
     }
     if(addresses) {
       fetchActivity();
     }
+
+    return () => {
+      abortController.abort();
+    };
   }, [addresses]);
 
   if(!addresses[0]) {

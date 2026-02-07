@@ -82,11 +82,11 @@ export const WalletMain = () => {
     }, 1000);
   };
 
-  const total = tokens.reduce((acc: number, item: any) => acc + item.value, 0);
+  const total = tokens.filter((item: any) => item.value !== '-').reduce((acc: number, item: any) => acc + item.value, 0);
 
-  const total_change = tokens.reduce((acc: number, item: any) => acc + item.value * item.value_change_percent / 100, 0);
+  const total_change = tokens.filter((item: any) => item.value !== '-').reduce((acc: number, item: any) => acc + item.value * item.value_change_percent / 100, 0);
 
-  const change_percent = tokens.reduce((acc: number, item: any) => acc + item.value_change_percent, 0);
+  const change_percent = tokens.filter((item: any) => item.value !== '-').reduce((acc: number, item: any) => acc + item.value_change_percent, 0);
 
   return (
     <>
@@ -186,10 +186,10 @@ export const WalletMain = () => {
                 <div className="flex flex-col items-end">
                   <div className="font-medium text-2xl">
                     {
-                      isTestnet ? '-' : '$' + _.value.toFixed(2)
+                      isTestnet || _.value === '-' ? '-' : '$' + _.value.toFixed(2)
                     }
                   </div>
-                  {_.value_change !== 0 ? (
+                  {_.value_change !== 0 && _.value !== '-' ? (
                     <div className={`font-normal text-xl ${_.value_change < 0 ? 'text-red-700' : 'text-green-700'}`}>
                       {
                         isTestnet ? '-' : (_.value_change < 0 ? '-' : '+') + '$' + Math.abs(_.value_change.toFixed(2))

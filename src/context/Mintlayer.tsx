@@ -73,6 +73,13 @@ export const MintlayerProvider  = ({ children }) => {
       }
     }
     setSocket(ws);
+
+    // Cleanup WebSocket on unmount
+    return () => {
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        ws.close();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -146,7 +153,7 @@ export const MintlayerProvider  = ({ children }) => {
     console.log(`Force removed transaction: ${txId}`);
   }
 
-  const checkTransactionStatus = async (txId) => {
+  const checkTransactionStatus = async (txId, signal) => {
     if (!addresses.length) return null;
     try {
       const response = await fetch(`https://api.mintini.app/batch_data`, {
@@ -158,22 +165,28 @@ export const MintlayerProvider  = ({ children }) => {
           type: '/transaction/:txid',
           ids: [txId],
           network
-        })
+        }),
+        signal
       });
       const data = await response.json();
       return data.results?.[0] || null;
     } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log('Transaction status check aborted');
+        return null;
+      }
       console.error('Error checking transaction status:', error);
       return null;
     }
   }
 
-  const updatePendingTransactionStatuses = async () => {
+  const updatePendingTransactionStatuses = async (signal) => {
     if (!wallet?.id || !db || !pendingTransactions.length) return;
 
     let updatedCount = 0;
     for (const tx of pendingTransactions) {
-      const status = await checkTransactionStatus(tx.id);
+      if (signal?.aborted) break;
+      const status = await checkTransactionStatus(tx.id, signal);
       if (status && status.confirmations) {
         await updateTransactionConfirmations(db, tx.id, status.confirmations);
         updatedCount++;
@@ -195,27 +208,37 @@ export const MintlayerProvider  = ({ children }) => {
     });
   }, [ml, db, wallets]);
 
-  const getAccount = async () => {
+  const getAccount = async (signal) => {
     if(!addresses.length) return;
     setTokensLoading(true);
-    const response = await fetch(WALLET_API + '/account', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ addresses, network })
-    });
-    const data = await response.json();
-    setTokens(data.tokens);
-    setTokensLoading(false);
+    try {
+      const response = await fetch(WALLET_API + '/account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ addresses, network }),
+        signal
+      });
+      const data = await response.json();
+      setTokens(data.tokens);
+      setTokensLoading(false);
 
-    // filter out HTLC
-    data.utxos = data.utxos.filter((utxo) => {
-      return utxo.utxo.type !== 'Htlc';
-    });
+      // filter out HTLC
+      data.utxos = data.utxos.filter((utxo) => {
+        return utxo.utxo.type !== 'Htlc';
+      });
 
-    setUtxos(data.utxos);
-    setDelegations(data.delegations);
+      setUtxos(data.utxos);
+      setDelegations(data.delegations);
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log('Account fetch aborted');
+      } else {
+        console.error('Error fetching account:', error);
+      }
+      setTokensLoading(false);
+    }
   }
 
   const getAddresses = () => {
@@ -283,35 +306,57 @@ export const MintlayerProvider  = ({ children }) => {
   }
 
   useEffect(() => {
-    getAccount();
+    const abortController = new AbortController();
+    getAccount(abortController.signal);
     //getTokens();
     //getUtxos();
+
+    return () => {
+      abortController.abort();
+    };
   }, [addresses]);
 
   // Periodic cleanup and status updates
   useEffect(() => {
     if (!wallet?.id || !db) return;
 
+    const abortController = new AbortController();
     const interval = setInterval(async () => {
       // Check for transaction status updates every 2 minutes
-      await updatePendingTransactionStatuses();
+      await updatePendingTransactionStatuses(abortController.signal);
       // Clean up confirmed transactions
       await cleanupConfirmedTransactions();
     }, 2 * 60 * 1000); // 2 minutes
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      abortController.abort();
+    };
   }, [wallet?.id, db, pendingTransactions.length]);
 
   useEffect(() => {
     if(initialized) return;
+    const abortController = new AbortController();
     const loadWasm = async () => {
-      const file = await fetch('/wasm_wrappers_bg.wasm');
-      const arrayBuffer = await file.arrayBuffer();
-      mintlayer.initSync(arrayBuffer);
-      setInitialized(true);
-      setMl(mintlayer);
+      try {
+        const file = await fetch('/wasm_wrappers_bg.wasm', { signal: abortController.signal });
+        const arrayBuffer = await file.arrayBuffer();
+        mintlayer.initSync(arrayBuffer);
+        setInitialized(true);
+        setMl(mintlayer);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('WASM loading aborted');
+        } else {
+          console.error('Error loading WASM:', error);
+        }
+      }
     }
     loadWasm();
+
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
   const pendingUtxos = pendingTransactions.reduce((acc, tx) => {

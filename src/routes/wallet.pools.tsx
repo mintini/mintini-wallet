@@ -21,12 +21,28 @@ export const WalletPools = () => {
   }
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     const fetchPools = async () => {
-      const response = await fetch(`https://${network === 1 ? 'lovelace.' : ''}explorer.mintlayer.org/api/pool/list`);
-      const data = await response.json();
-      setPools(data);
+      try {
+        const response = await fetch(`https://${network === 1 ? 'lovelace.' : ''}explorer.mintlayer.org/api/pool/list`, {
+          signal: abortController.signal
+        });
+        const data = await response.json();
+        setPools(data);
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('Pools fetch aborted');
+        } else {
+          console.error('Error fetching pools:', error);
+        }
+      }
     }
     fetchPools();
+
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
   const account_pools: any[] = delegations.map((delegation: any) => {

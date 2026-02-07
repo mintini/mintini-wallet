@@ -210,6 +210,8 @@ export const DelegationWithdraw = ({delegations}) => {
   const handleBroadcast = async () => {
     setState('broadcast');
     const transactionBody = transactionHEX;
+    const abortController = new AbortController();
+
     try {
       const response = await fetch(`https://api.mintini.app/transaction?${network===1?'network=1':'network=0'}`, {
         method: 'POST',
@@ -217,6 +219,7 @@ export const DelegationWithdraw = ({delegations}) => {
           'Content-Type': 'plain/text',
         },
         body: transactionBody,
+        signal: abortController.signal
       });
       if (response.status === 200) {
         // need to store this transaction in the database

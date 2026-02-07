@@ -255,25 +255,57 @@ export const WalletDex = () => {
   // }, []);
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     const fetchPairs = async () => {
-      const response = await fetch(`https://api-server${network===1?'-lovelace':''}.mintlayer.org/api/v2/order/pair/${sellToken.replace('Coin', network===1?'TML':'ML')}_${buyToken}`);
-      if(!response.ok) {
-        return;
+      try {
+        const response = await fetch(`https://api-server${network===1?'-lovelace':''}.mintlayer.org/api/v2/order/pair/${sellToken.replace('Coin', network===1?'TML':'ML')}_${buyToken}`, {
+          signal: abortController.signal
+        });
+        if(!response.ok) {
+          return;
+        }
+        const data = await response.json();
+        setPairs(data);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Pairs fetch aborted');
+        } else {
+          console.error('Error fetching pairs:', error);
+        }
       }
-      const data = await response.json();
-      setPairs(data);
     }
     fetchPairs();
+
+    return () => {
+      abortController.abort();
+    };
   }, [sellToken, buyToken]);
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     const fetchTokens = async () => {
-      const response = await fetch('https://api.mintini.app/dex_tokens?network=' + network);
-      const data = await response.json();
-      setTokensList(data);
-      setBuyToken(data[0].token_id);
+      try {
+        const response = await fetch('https://api.mintini.app/dex_tokens?network=' + network, {
+          signal: abortController.signal
+        });
+        const data = await response.json();
+        setTokensList(data);
+        setBuyToken(data[0].token_id);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Tokens fetch aborted');
+        } else {
+          console.error('Error fetching tokens:', error);
+        }
+      }
     }
     fetchTokens();
+
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
   useEffect(() => {
@@ -349,6 +381,8 @@ export const WalletDex = () => {
   const handleBroadcast = async () => {
     setState('broadcast');
     const transactionBody = transactionHEX;
+    const abortController = new AbortController();
+
     try {
       const response = await fetch(`https://api.mintini.app/transaction?${network===1?'network=1':'network=0'}`, {
         method: 'POST',
@@ -356,6 +390,7 @@ export const WalletDex = () => {
           'Content-Type': 'plain/text',
         },
         body: transactionBody,
+        signal: abortController.signal
       });
 
       // TODO: setNonceAdjust from the error response. also might be UTXO
